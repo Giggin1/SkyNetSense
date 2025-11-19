@@ -27,111 +27,118 @@ function getCoordsForCity(citta) {
   return { lat: 41.8719, lng: 12.5674 };
 }
 
-// ==============================
-// 2. Dati finti delle stazioni
-//    (più avanti li prenderai dal backend)
-// ==============================
-const stazioni = [
-  {
-    cf_utente: "RSSMRA99A01H501X",
-    nome_stazione: "Skynetsense_Casa",
-    paese: "Italia",
-    regione: "Lombardia",
-    citta: "Milano",
-    ultimo_dato: "2025-11-18 10:15:00",
-    dati: {
-      Temperatura: "22.0 °C",
-      Umidità: "44 %",
-      "PM2.5": "8.4 µg/m³",
-    },
-  },
-  {
-    cf_utente: "RSSMRA99A01H501X",
-    nome_stazione: "Skynetsense_Tetto",
-    paese: "Italia",
-    regione: "Lombardia",
-    citta: "Milano",
-    ultimo_dato: "2025-11-18 10:20:00",
-    dati: {
-      Temperatura: "19.3 °C",
-      Velocità_Vento: "3.2 m/s",
-    },
-  },
-  {
-    cf_utente: "BNCLNZ01B45F205Y",
-    nome_stazione: "Skynetsense_Campagna",
-    paese: "Italia",
-    regione: "Lazio",
-    citta: "Viterbo",
-    ultimo_dato: "2025-11-18 09:50:00",
-    dati: {
-      Temperatura: "16.8 °C",
-      Umidità: "61.5 %",
-      PM10: "12.1 µg/m³",
-    },
-  },
-];
-
 const stationListDiv = document.getElementById("station-list");
 
 // ==============================
-// 3. Disegna marker + card laterali
+// 2. Funzione che disegna stazioni su mappa + sidebar
 // ==============================
 
-stazioni.forEach((s) => {
-  const coords = getCoordsForCity(s.citta);
+function renderStazioni(stazioni) {
+  // pulisco la lista laterale
+  stationListDiv.innerHTML = "";
 
-  const marker = L.circleMarker([coords.lat, coords.lng], {
-    radius: 8,
-    color: "#22c55e",
-    weight: 2,
-    fillColor: "#22c55e",
-    fillOpacity: 0.9,
-  }).addTo(map);
+  stazioni.forEach((s) => {
+    const coords = getCoordsForCity(s.citta);
 
-  let popupHtml = `<strong>${s.nome_stazione}</strong><br/>
-    ${s.citta} (${s.regione})<br/>
-    <small>Ultimo dato: ${s.ultimo_dato}</small><br/><br/>`;
+    // Marker verde sulla mappa
+    const marker = L.circleMarker([coords.lat, coords.lng], {
+      radius: 8,
+      color: "#22c55e",
+      weight: 2,
+      fillColor: "#22c55e",
+      fillOpacity: 0.9,
+    }).addTo(map);
 
-  popupHtml += "<strong>Dati recenti:</strong><br/>";
-  for (const [chiave, valore] of Object.entries(s.dati)) {
-    popupHtml += `${chiave}: ${valore}<br/>`;
-  }
+    // Popup sulla mappa
+    let popupHtml = `<strong>${s.nome_stazione}</strong><br/>
+      ${s.citta || ""} ${s.regione ? "(" + s.regione + ")" : ""}<br/>`;
 
-  marker.bindPopup(popupHtml);
+    if (s.ultimo_dato) {
+      popupHtml += `<small>Ultimo dato: ${s.ultimo_dato}</small><br/><br/>`;
+    } else {
+      popupHtml += `<small>Nessun dato disponibile</small><br/><br/>`;
+    }
 
-  const card = document.createElement("div");
-  card.className = "station-card";
-  card.innerHTML = `
-    <div class="station-title-row">
-      <div class="station-title">${s.nome_stazione}</div>
-      <div class="station-chip">${s.citta}</div>
-    </div>
-    <div class="station-location">${s.citta} (${s.regione}) • ${s.paese}</div>
-    <div class="station-data">
-      <div class="pill">
-        <span class="pill-dot"></span>
-        Ultimo dato: ${s.ultimo_dato}
+    if (s.dati && Object.keys(s.dati).length > 0) {
+      popupHtml += "<strong>Dati recenti:</strong><br/>";
+      for (const [chiave, valore] of Object.entries(s.dati)) {
+        popupHtml += `${chiave}: ${valore}<br/>`;
+      }
+    }
+
+    marker.bindPopup(popupHtml);
+
+    // Card nella sidebar
+    const card = document.createElement("div");
+    card.className = "station-card";
+    card.innerHTML = `
+      <div class="station-title-row">
+        <div class="station-title">${s.nome_stazione}</div>
+        <div class="station-chip">${s.citta || ""}</div>
       </div>
-      ${Object.entries(s.dati)
-        .map(
-          ([k, v]) => `
-        <div class="data-line">
-          <span class="data-key">${k}</span>
-          <span class="data-value">${v}</span>
-        </div>`
-        )
-        .join("")}
-    </div>
-  `;
+      <div class="station-location">
+        ${s.citta || ""} ${s.regione ? "(" + s.regione + ")" : ""} • ${s.paese || ""}
+      </div>
+      <div class="station-data">
+        <div class="pill">
+          <span class="pill-dot"></span>
+          ${
+            s.ultimo_dato
+              ? "Ultimo dato: " + s.ultimo_dato
+              : "Nessun dato disponibile"
+          }
+        </div>
+        ${
+          s.dati && Object.keys(s.dati).length > 0
+            ? Object.entries(s.dati)
+                .map(
+                  ([k, v]) => `
+          <div class="data-line">
+            <span class="data-key">${k}</span>
+            <span class="data-value">${v}</span>
+          </div>`
+                )
+                .join("")
+            : `<div class="data-line">
+                 <span class="data-key">Dati</span>
+                 <span class="data-value">Nessun dato</span>
+               </div>`
+        }
+      </div>
+    `;
 
-  card.addEventListener("click", () => {
-    map.setView([coords.lat, coords.lng], 11);
-    marker.openPopup();
+    // Click sulla card → centra la mappa e apre il popup
+    card.addEventListener("click", () => {
+      map.setView([coords.lat, coords.lng], 11);
+      marker.openPopup();
+    });
+
+    stationListDiv.appendChild(card);
   });
+}
 
-  stationListDiv.appendChild(card);
-});
+// ==============================
+// 3. Chiama il backend per caricare le stazioni
+// ==============================
 
-// In futuro: sostituisci l'array "stazioni" con una fetch al backend, es:
-// fetch('/api/public/stazioni').then(res => res.json()).then(stazioni => { ... });
+async function caricaStazioni() {
+  try {
+    // visto che index.html viene servito da Flask su http://127.0.0.1:5000/
+    // possiamo usare un path relativo:
+    const response = await fetch("/api/public/stazioni");
+
+    if (!response.ok) {
+      throw new Error("Risposta non OK dal server");
+    }
+
+    const stazioni = await response.json();
+    renderStazioni(stazioni);
+  } catch (err) {
+    console.error("Errore nel caricamento delle stazioni:", err);
+    stationListDiv.innerHTML =
+      '<div style="font-size:0.85rem;color:#fca5a5;">Errore nel caricamento dei dati. Verifica che il server Flask (app.py) sia in esecuzione.</div>';
+  }
+}
+
+// Avvia subito il caricamento quando la pagina è pronta
+caricaStazioni();

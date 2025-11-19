@@ -15,47 +15,125 @@ def home():
 
 # Definiamo un endpoint GET /api/public/stazioni
 @app.route("/api/public/stazioni", methods=["GET"])
-def get_stazioni_fake():
+def get_stazioni():
     """
-    Questa funzione viene eseguita quando il browser chiama:
-    GET http://127.0.0.1:5000/api/public/stazioni
+    Ora questa funzione legge:
+    - tutte le stazioni dalla tabella Stazioni
+    - per ogni stazione, l'ULTIMO set di dati dalla tabella Dati (+ Sensori)
     """
-    # Dati FINTI: stessa struttura che useremo poi con il DB
-    stazioni = [
-        {
-            "cf_utente": "RSSMRA99A01H501X",
-            "nome_stazione": "Skynetsense_Casa",
-            "paese": "Italia",
-            "regione": "Lombardia",
-            "citta": "Milano",
-            "provincia": "MI",
-            "cap": "20100",
-            "ultimo_dato": "2025-11-18 10:15:00",
-            "dati": {
-                "Temperatura": "22.0 °C",
-                "Umidità": "44 %",
-                "PM2.5": "8.4 µg/m³"
-            }
-        },
-        {
-            "cf_utente": "BNCLNZ01B45F205Y",
-            "nome_stazione": "Skynetsense_Campagna",
-            "paese": "Italia",
-            "regione": "Lazio",
-            "citta": "Viterbo",
-            "provincia": "VT",
-            "cap": "01100",
-            "ultimo_dato": "2025-11-18 09:50:00",
-            "dati": {
-                "Temperatura": "16.8 °C",
-                "Umidità": "61.5 %",
-                "PM10": "12.1 µg/m³"
-            }
-        }
-    ]
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore di connessione al database"}), 500
 
-    # jsonify converte la lista Python in JSON per il browser
+    cur_st = conn.cursor()
+
+    sql_stazioni = """
+        SELECT
+            cf_utente,
+            nome_stazione,
+            paese,
+            regione,
+            citta,
+            provincia,
+            cap,
+            ultimo_dato_inviato
+        FROM Stazioni
+        ORDER BY regione, citta, nome_stazione
+    """
+
+    cur_st.execute(sql_stazioni)
+
+    stazioni = []
+
+    # scorro tutte le stazioni
+    for (
+        cf_utente,
+        nome_stazione,
+        paese,
+        regione,
+        citta,
+        provincia,
+        cap,
+        ultimo_dato_inviato
+    ) in cur_st:
+
+        # ==============================
+        # 1) Trovo l'ULTIMO timestamp_lettura per questa stazione
+        # ==============================
+        cur_ts = conn.cursor()
+        sql_ultimo_ts = """
+            SELECT MAX(timestamp_lettura)
+            FROM Dati
+            WHERE cf_utente = ?
+              AND nome_stazione = ?
+        """
+        cur_ts.execute(sql_ultimo_ts, (cf_utente, nome_stazione))
+        row_ts = cur_ts.fetchone()
+        cur_ts.close()
+
+        ultimo_ts = row_ts[0] if row_ts is not None else None
+
+        dati = {}
+        ultimo_dato_str = None
+
+        # ==============================
+        # 2) Se esiste almeno una misura, prendo TUTTI i dati di quel timestamp
+        # ==============================
+        if ultimo_ts is not None:
+            cur_dati = conn.cursor()
+            sql_dati = """
+                SELECT
+                    d.nome_sensore,
+                    d.valore,
+                    s.unita
+                FROM Dati d
+                JOIN Sensori s
+                  ON s.modello = d.modello
+                 AND s.nome    = d.nome_sensore
+                WHERE d.cf_utente = ?
+                  AND d.nome_stazione = ?
+                  AND d.timestamp_lettura = ?
+                ORDER BY d.nome_sensore
+            """
+            cur_dati.execute(sql_dati, (cf_utente, nome_stazione, ultimo_ts))
+
+            for nome_sensore, valore, unita in cur_dati:
+                if unita is None:
+                    unita = ""
+                testo_valore = f"{valore} {unita}".strip()
+                dati[nome_sensore] = testo_valore
+
+            cur_dati.close()
+
+            # formatto il timestamp come stringa
+            ultimo_dato_str = ultimo_ts.strftime("%Y-%m-%d %H:%M:%S")
+
+        # ==============================
+        # 3) Se NON ho trovato dati in Dati, uso eventualmente ultimo_dato_inviato
+        # ==============================
+        if ultimo_dato_str is None and ultimo_dato_inviato is not None:
+            ultimo_dato_str = ultimo_dato_inviato.strftime("%Y-%m-%d %H:%M:%S")
+
+        # ==============================
+        # 4) Costruisco l'oggetto stazione per il JSON
+        # ==============================
+        stazioni.append({
+            "cf_utente": cf_utente,
+            "nome_stazione": nome_stazione,
+            "paese": paese,
+            "regione": regione,
+            "citta": citta,
+            "provincia": provincia,
+            "cap": cap,
+            "ultimo_dato": ultimo_dato_str,
+            "dati": dati
+        })
+
+    cur_st.close()
+    conn.close()
+
     return jsonify(stazioni)
+
 
 
 # Avvia il server Flask se eseguiamo direttamente questo file
