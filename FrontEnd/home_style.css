@@ -78,6 +78,8 @@ main {
 #map {
   flex: 2;
   height: 100%;
+  min-height: 320px;
+  min-width: 0;
 }
 
 #sidebar {

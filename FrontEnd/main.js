@@ -1,15 +1,46 @@
 "use strict";
 
 // ==============================
-// 1. Inizializza mappa
+// 1. Inizializza mappa in modo robusto (ritardato)
+//    per evitare che la mappa non venga renderizzata su mobile
 // ==============================
 
-const map = L.map("map").setView([41.8719, 12.5674], 5); // Italia centrata
+let map = null;
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 18,
-  attribution: "&copy; OpenStreetMap contributors",
-}).addTo(map);
+function initMap() {
+  if (map) return;
+  // Centro sul Sud Italia (avvia la vista verso Napoli / Campania)
+  map = L.map("map").setView([40.5, 14.0], 6);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: "&copy; OpenStreetMap contributors",
+  }).addTo(map);
+
+  // Dopo un breve delay, invalida la size per forzare il render corretto
+  setTimeout(() => {
+    try {
+      map.invalidateSize();
+    } catch (e) {
+      // ignora
+    }
+  }, 200);
+
+  // Ricalcola dimensione su resize/orientation
+  window.addEventListener("resize", () => {
+    try {
+      map.invalidateSize();
+    } catch (e) {}
+  });
+  window.addEventListener("orientationchange", () => {
+    // piccolo delay per permettere al browser di aggiornare layout
+    setTimeout(() => {
+      try {
+        map.invalidateSize();
+      } catch (e) {}
+    }, 200);
+  });
+}
 
 // Mappa città -> coordinate approssimative
 const cityCoords = {
@@ -27,7 +58,8 @@ function getCoordsForCity(citta) {
   return { lat: 41.8719, lng: 12.5674 };
 }
 
-const stationListDiv = document.getElementById("station-list");
+let stationListDiv = null;
+
 
 // ==============================
 // 2. Funzione che disegna stazioni su mappa + sidebar
@@ -35,6 +67,7 @@ const stationListDiv = document.getElementById("station-list");
 
 function renderStazioni(stazioni) {
   // pulisco la lista laterale
+  if (!stationListDiv) stationListDiv = document.getElementById("station-list");
   stationListDiv.innerHTML = "";
 
   stazioni.forEach((s) => {
@@ -115,6 +148,13 @@ function renderStazioni(stazioni) {
 
     stationListDiv.appendChild(card);
   });
+
+    // Assicuriamoci che la mappa ricalcoli le dimensioni dopo aver inserito i marker
+    if (map) {
+      try {
+        map.invalidateSize();
+      } catch (e) {}
+    }
 }
 
 // ==============================
@@ -141,4 +181,11 @@ async function caricaStazioni() {
 }
 
 // Avvia subito il caricamento quando la pagina è pronta
-caricaStazioni();
+document.addEventListener("DOMContentLoaded", () => {
+  // elemento della sidebar
+  stationListDiv = document.getElementById("station-list");
+
+  // inizializza la mappa e carica i dati
+  initMap();
+  caricaStazioni();
+});

@@ -1,12 +1,14 @@
-import os
+
 from flask import Flask, request, jsonify
 from db import connessione
+import os
 
-# Cartella FrontEnd (relativa alla posizione di questo file)
-FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "FrontEnd")
-
-# Crea l'app Flask e usa la cartella FrontEnd come static folder
-app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
+# Crea l'app Flask e usa la cartella FrontEnd come static folder (path inline)
+app = Flask(
+    __name__,
+    static_folder=os.path.join(os.path.dirname(__file__), "..", "FrontEnd"),
+    static_url_path=""
+)
 
 @app.route("/", methods=["GET"])
 def home():
