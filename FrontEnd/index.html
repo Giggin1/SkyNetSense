@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skynetsense - Mappa stazioni</title>
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
+      color: #e5e7eb;
+    }
+
+    header {
+      height: 56px;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      backdrop-filter: blur(10px);
+      background: linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.6));
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .brand-logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #bbf7d0, #22c55e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #022c22;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.7);
+    }
+
+    .brand-title {
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      font-size: 1.05rem;
+    }
+
+    .brand-subtitle {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .header-right {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      min-height: 0; /* fondamentale per far stare bene la mappa */
+    }
+
+    #map {
+      flex: 2;
+      height: 100%;
+    }
+
+    #sidebar {
+      flex: 1;
+      min-width: 300px;
+      max-width: 420px;
+      padding: 1rem 1rem 0.8rem 1rem;
+      border-left: 1px solid rgba(148, 163, 184, 0.15);
+      background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-bottom: 0.3rem;
+    }
+
+    .badge-public {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      background: rgba(22, 163, 74, 0.12);
+      color: #4ade80;
+      padding: 0.12rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      margin-bottom: 0.4rem;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
+    }
+
+    .legend {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+    }
+
+    #station-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 0.1rem;
+      padding-bottom: 0.4rem;
+    }
+
+    /* scrollbar carina */
+    #station-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    #station-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #station-list::-webkit-scrollbar-thumb {
+      background: #1f2937;
+      border-radius: 999px;
+    }
+
+    .station-card {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 0.9rem;
+      padding: 0.75rem 0.85rem;
+      margin-bottom: 0.55rem;
+      cursor: pointer;
+      transition:
+        background 0.16s ease,
+        border-color 0.16s ease,
+        transform 0.1s ease,
+        box-shadow 0.16s ease;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.6);
+    }
+
+    .station-card:hover {
+      background: radial-gradient(circle at top left, #022c22 0, #020617 45%);
+      border-color: #22c55e;
+      transform: translateY(-1px);
+      box-shadow: 0 14px 26px rgba(34, 197, 94, 0.18);
+    }
+
+    .station-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.2rem;
+    }
+
+    .station-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .station-chip {
+      font-size: 0.7rem;
+      padding: 0.12rem 0.45rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: #9ca3af;
+    }
+
+    .station-location {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+
+    .station-data {
+      font-size: 0.8rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: rgba(22, 163, 74, 0.08);
+      color: #a7f3d0;
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      margin-bottom: 0.2rem;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #4ade80;
+      box-shadow: 0 0 4px rgba(74, 222, 128, 0.8);
+    }
+
+    .data-line {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.08rem;
+    }
+
+    .data-key {
+      color: #9ca3af;
+    }
+
+    .data-value {
+      font-weight: 500;
+    }
+
+    .footer-info {
+      font-size: 0.75rem;
+      color: #6b7280;
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+      padding-top: 0.4rem;
+      margin-top: 0.2rem;
+    }
+
+    .footer-info strong {
+      color: #e5e7eb;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        flex-direction: column;
+      }
+      #map {
+        height: 45vh;
+      }
+      #sidebar {
+        max-width: 100%;
+        border-left: none;
+        border-top: 1px solid rgba(148, 163, 184, 0.15);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-logo">S</div>
+      <div>
+        <div class="brand-title">Skynetsense</div>
+        <div class="brand-subtitle">Rete di stazioni meteo distribuite</div>
+      </div>
+    </div>
+    <div class="header-right">
+      Vista pubblica • Solo lettura dati
+    </div>
+  </header>
+
+  <main>
+    <div id="map"></div>
+
+    <aside id="sidebar">
+      <div class="badge-public">
+        <span class="badge-dot"></span>
+        Accesso pubblico: nessun login richiesto
+      </div>
+
+      <div class="subtitle">
+        Gli utenti non registrati possono visualizzare <strong>stazioni</strong> e
+        <strong>dati aggregati</strong>, ma non modificare impostazioni o configurazioni.
+      </div>
+
+      <div class="legend">
+        <span class="legend-dot"></span>
+        Puntini verdi: posizione approssimativa delle stazioni nella città registrata.
+      </div>
+
+      <div id="station-list"></div>
+
+      <div class="footer-info">
+        In futuro, l'area riservata permetterà agli utenti registrati di
+        <strong>gestire le proprie stazioni</strong>, controllare lo storico completo
+        e configurare i sensori connessi agli ESP32.
+      </div>
+    </aside>
+  </main>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script>
+    // ==============================
+    // 1. Inizializza mappa
+    // ==============================
+    const map = L.map("map").setView([41.8719, 12.5674], 5); // Italia centrata
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    // Mappa città -> coordinate approssimative
+    const cityCoords = {
+      Milano: { lat: 45.4642, lng: 9.19 },
+      Viterbo: { lat: 42.42, lng: 12.11 },
+      Roma: { lat: 41.9028, lng: 12.4964 },
+      Napoli: { lat: 40.8518, lng: 14.2681 },
+    };
+
+    function getCoordsForCity(citta) {
+      if (cityCoords[citta]) {
+        return cityCoords[citta];
+      }
+      // fallback: centro Italia
+      return { lat: 41.8719, lng: 12.5674 };
+    }
+
+    // ==============================
+    // 2. Dati finti delle stazioni
+    //    (più avanti li prenderai dal backend)
+    // ==============================
+    const stazioni = [
+      {
+        cf_utente: "RSSMRA99A01H501X",
+        nome_stazione: "Skynetsense_Casa",
+        paese: "Italia",
+        regione: "Lombardia",
+        citta: "Milano",
+        ultimo_dato: "2025-11-18 10:15:00",
+        dati: {
+          Temperatura: "22.0 °C",
+          Umidità: "44 %",
+          "PM2.5": "8.4 µg/m³",
+        },
+      },
+      {
+        cf_utente: "RSSMRA99A01H501X",
+        nome_stazione: "Skynetsense_Tetto",
+        paese: "Italia",
+        regione: "Lombardia",
+        citta: "Milano",
+        ultimo_dato: "2025-11-18 10:20:00",
+        dati: {
+          Temperatura: "19.3 °C",
+          Velocità_Vento: "3.2 m/s",
+        },
+      },
+      {
+        cf_utente: "BNCLNZ01B45F205Y",
+        nome_stazione: "Skynetsense_Campagna",
+        paese: "Italia",
+        regione: "Lazio",
+        citta: "Viterbo",
+        ultimo_dato: "2025-11-18 09:50:00",
+        dati: {
+          Temperatura: "16.8 °C",
+          Umidità: "61.5 %",
+          PM10: "12.1 µg/m³",
+        },
+      },
+    ];
+
+    const stationListDiv = document.getElementById("station-list");
+
+    // ==============================
+    // 3. Disegna marker + card laterali
+    // ==============================
+    stazioni.forEach((s) => {
+      const coords = getCoordsForCity(s.citta);
+
+      const marker = L.circleMarker([coords.lat, coords.lng], {
+        radius: 8,
+        color: "#22c55e",
+        weight: 2,
+        fillColor: "#22c55e",
+        fillOpacity: 0.9,
+      }).addTo(map);
+
+      let popupHtml = `<strong>${s.nome_stazione}</strong><br/>
+        ${s.citta} (${s.regione})<br/>
+        <small>Ultimo dato: ${s.ultimo_dato}</small><br/><br/>`;
+
+      popupHtml += "<strong>Dati recenti:</strong><br/>";
+      for (const [chiave, valore] of Object.entries(s.dati)) {
+        popupHtml += `${chiave}: ${valore}<br/>`;
+      }
+
+      marker.bindPopup(popupHtml);
+
+      const card = document.createElement("div");
+      card.className = "station-card";
+      card.innerHTML = `
+        <div class="station-title-row">
+          <div class="station-title">${s.nome_stazione}</div>
+          <div class="station-chip">${s.citta}</div>
+        </div>
+        <div class="station-location">${s.citta} (${s.regione}) • ${s.paese}</div>
+        <div class="station-data">
+          <div class="pill">
+            <span class="pill-dot"></span>
+            Ultimo dato: ${s.ultimo_dato}
+          </div>
+          ${Object.entries(s.dati)
+            .map(
+              ([k, v]) => `
+            <div class="data-line">
+              <span class="data-key">${k}</span>
+              <span class="data-value">${v}</span>
+            </div>`
+            )
+            .join("")}
+        </div>
+      `;
+
+      card.addEventListener("click", () => {
+        map.setView([coords.lat, coords.lng], 11);
+        marker.openPopup();
+      });
+
+      stationListDiv.appendChild(card);
+    });
+  </script>
+</body>
+</html>
