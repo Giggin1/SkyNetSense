@@ -1,12 +1,12 @@
 
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from db import connessione
-import os
+from functools import wraps
 
 # Crea l'app Flask e usa la cartella FrontEnd come static folder (path inline)
 app = Flask(
     __name__,
-    static_folder=os.path.join(os.path.dirname(__file__), "..", "FrontEnd"),
+    static_folder="../FrontEnd",
     static_url_path=""
 )
 
@@ -14,6 +14,13 @@ app = Flask(
 def home():
     # Restituisce il file index.html dalla cartella FrontEnd
     return app.send_static_file("index.html")
+
+
+@app.route("/registrazione")
+def view_registrazione():
+    # Cerca il file nella cartella static (FrontEnd)
+    return app.send_static_file("registrazione.html")
+
 
 # Definiamo un endpoint GET /api/public/stazioni
 @app.route("/api/public/stazioni", methods=["GET"])
@@ -66,8 +73,8 @@ def get_stazioni():
         sql_ultimo_ts = """
             SELECT MAX(timestamp_lettura)
             FROM Dati
-            WHERE cf_utente = ?
-              AND nome_stazione = ?
+            WHERE cf_utente = %s
+              AND nome_stazione = %s
         """
         cur_ts.execute(sql_ultimo_ts, (cf_utente, nome_stazione))
         row_ts = cur_ts.fetchone()
@@ -92,9 +99,9 @@ def get_stazioni():
                 JOIN Sensori s
                   ON s.modello = d.modello
                  AND s.nome    = d.nome_sensore
-                WHERE d.cf_utente = ?
-                  AND d.nome_stazione = ?
-                  AND d.timestamp_lettura = ?
+                WHERE d.cf_utente = %s
+                  AND d.nome_stazione = %s
+                  AND d.timestamp_lettura = %s
                 ORDER BY d.nome_sensore
             """
             cur_dati.execute(sql_dati, (cf_utente, nome_stazione, ultimo_ts))
@@ -135,6 +142,51 @@ def get_stazioni():
     conn.close()
 
     return jsonify(stazioni)
+
+
+# Endpoint per la registrazione pubblica
+@app.route("/api/public/register", methods=["POST"])
+def register_user():
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Payload non valido"}), 400
+
+    nickname = (data.get("nickname") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+
+    if not nickname or not email or not password:
+        return jsonify({"error": "Inserisci nickname, email e password"}), 400
+
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore di connessione al database"}), 500
+
+    cur = conn.cursor()
+    try:
+        # Verifica email già presente
+        cur.execute("SELECT CF FROM utenti WHERE email = %s", (email,))
+        row = cur.fetchone()
+        if row is not None:
+            return jsonify({"error": "Email già registrata"}), 409
+
+        # Inserisci nuovo utente
+        cur.execute(
+            "INSERT INTO utenti (CF, nickname, email, password, nome, cognome) VALUES (%s, %s, %s, %s, %s, %s)",
+            (data.get("codice_fiscale"), nickname, email, password , data.get("nome"), data.get("cognome")),
+        )
+        conn.commit()
+        return jsonify({"message": "Registrazione completata"}), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": f"Errore server: {e}"}), 500
+    finally:
+        try:
+            cur.close()
+        except:
+            pass
+        conn.close()
 
 
 
