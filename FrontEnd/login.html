@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Skynetsense</title>
+    <link rel="stylesheet" href="login.css" />
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="brand-logo">S</div>
+            <div>
+                <div class="brand-title">Skynetsense</div>
+                <div class="brand-subtitle">Portale Utenti</div>
+            </div>
+        </div>
+        <a href="/" class="btn-back">Torna alla Mappa</a>
+    </header>
+
+    <main class="login-container">
+        <div class="form-card">
+            <h2>Entra con il tuo account</h2>
+
+            <div id="login-message" class="login-message"></div>
+
+            <form id="login-form">
+
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input id="login-email" type="email" placeholder="nome@esempio.com" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input id="login-password" type="password" placeholder="Inserisci la tua password" required />
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Login</button>
+                </div>
+
+                <div class="form-footer">
+                    Non hai un account? <a href="/registrazione">Registrati qui!</a>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
+    <script src="login.js"></script>
+</body>
+
+</html>

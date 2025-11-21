@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Skynetsense - Mappa stazioni</title>
 
   <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <!-- Il tuo CSS -->
   <link rel="stylesheet" href="home_style.css" />
 </head>
+
 <body>
   <header>
     <div class="brand">
@@ -26,11 +24,17 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.8rem;">
-      <div class="header-right">
-        Vista pubblica • Solo lettura dati
+      <div class="header-right" id="user-panel" style="display:flex; gap:10px; align-items:center;">
+        <div class="header-right">
+          Vista pubblica • Solo lettura dati
+        </div>
+        <a href="/login" class="btn-login"
+          style="text-decoration: none; display: inline-block; text-align: center;">Login</a>
+        <a href="/registrazione" class="btn-register"
+          style="text-decoration: none; display: inline-block; text-align: center;">Registrati</a>
       </div>
-      <a href="/registrazione" class="btn-register" style="text-decoration: none; display: inline-block; text-align: center;">Registrati</a>
-    </div> </header>
+    </div>
+  </header>
 
 
   <main>
@@ -63,13 +67,11 @@
   </main>
 
   <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
   <!-- Il tuo script frontend -->
   <script src="main.js"></script>
 </body>
+
 </html>

@@ -10,6 +10,8 @@ app = Flask(
     static_url_path=""
 )
 
+app.secret_key = "DATECIIL30ELODE"
+
 @app.route("/", methods=["GET"])
 def home():
     # Restituisce il file index.html dalla cartella FrontEnd
@@ -20,6 +22,11 @@ def home():
 def view_registrazione():
     # Cerca il file nella cartella static (FrontEnd)
     return app.send_static_file("registrazione.html")
+
+@app.route("/login")
+def view_login():
+    # Cerca il file nella cartella static (FrontEnd)
+    return app.send_static_file("login.html")
 
 
 # Definiamo un endpoint GET /api/public/stazioni
@@ -188,7 +195,83 @@ def register_user():
             pass
         conn.close()
 
+# Endpoint per il login
+# Sostituisci la tua funzione login_user attuale con questa completa
 
+@app.route("/api/public/login", methods=["POST"])
+def login_user():
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Payload non valido"}), 400
+
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+
+    if not email or not password:
+        return jsonify({"error": "Inserisci email e password"}), 400
+
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore di connessione al database"}), 500
+
+    cur = conn.cursor()
+    try:
+        # Verifica credenziali
+        cur.execute(
+            "SELECT CF, nickname FROM utenti WHERE email = %s AND password = %s",
+            (email, password),
+        )
+        
+        # === PARTE AGGIUNTA: Recupero del risultato e risposta ===
+        
+        account = cur.fetchone() # Recupera la riga trovata (se esiste)
+
+        if account:
+            # account[0] = CF, account[1] = nickname
+            
+            # ---> SALVIAMO I DATI IN SESSIONE <---
+            session.permanent = True
+            session["user_cf"] = account[0]
+            session["nickname"] = account[1]
+            session["logged_in"] = True
+
+            return jsonify({
+                "message": "Login effettuato con successo",
+                "nickname": account[1],
+                "redirect": "/" # Diciamo al frontend dove andare
+            }), 200
+        else:
+            return jsonify({"error": "Email o password errati"}), 401
+        
+        # =========================================================
+    except Exception as e:
+        # In caso di errore SQL
+        print(f"Errore SQL: {e}") # Utile per il debug nella console
+        conn.rollback()
+        return jsonify({"error": "Errore interno del server"}), 500
+    finally:
+        try:
+            cur.close()
+        except:
+            pass
+        conn.close()
+
+
+@app.route("/api/auth/logout")
+def logout():
+    session.clear() # Rimuove tutti i dati dalla sessione
+    return redirect(url_for('home')) # O restituisci un JSON se preferisci gestirlo via JS
+
+@app.route("/api/auth/status")
+def session_status():
+    if "logged_in" in session:
+        return jsonify({
+            "logged_in": True, 
+            "nickname": session["nickname"],
+            "cf": session["user_cf"]
+        })
+    else:
+        return jsonify({"logged_in": False})
 
 # Avvia il server Flask se eseguiamo direttamente questo file
 if __name__ == "__main__":

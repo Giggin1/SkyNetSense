@@ -180,6 +180,52 @@ async function caricaStazioni() {
   }
 }
 
+async function checkLoginStatus() {
+  const userPanel = document.getElementById("user-panel");
+  if (!userPanel) return; // Se non siamo nella home o manca l'elemento
+
+  try {
+    const response = await fetch("/api/auth/status");
+    const data = await response.json();
+
+    if (data.logged_in) {
+      // UTENTE LOGGATO: Mostra Benvenuto e Logout
+      userPanel.innerHTML = `
+        <span style="font-weight:bold; color:#333;">Ciao, ${data.nickname}</span>
+        <button onclick="doLogout()" class="btn-login" style="cursor:pointer; background:#ef4444; border:none; color:white; padding: 0.5rem 1rem; border-radius:4px;">Logout</button>
+      `;
+    } else {
+      // UTENTE NON LOGGATO: Mostra Login e Registrati
+      userPanel.innerHTML = `
+        <div class="header-right">Vista pubblica • Solo lettura</div>
+        <a href="/login" class="btn-login" style="text-decoration: none; text-align: center;">Login</a>
+        <a href="/registrazione" class="btn-register" style="text-decoration: none; text-align: center;">Registrati</a>
+      `;
+    }
+  } catch (e) {
+    console.error("Errore check sessione:", e);
+  }
+}
+
+// Funzione per il Logout
+async function doLogout() {
+  await fetch("/api/auth/logout");
+  window.location.reload(); // Ricarica la pagina per resettare la vista
+}
+
+// Aggiungi la chiamata dentro DOMContentLoaded esistente
+document.addEventListener("DOMContentLoaded", () => {
+  // ... codice esistente (initMap, stationListDiv) ...
+  
+  stationListDiv = document.getElementById("station-list");
+  initMap();
+  caricaStazioni();
+
+  // ---> NUOVA CHIAMATA
+  checkLoginStatus();
+});
+
+
 // Avvia subito il caricamento quando la pagina è pronta
 document.addEventListener("DOMContentLoaded", () => {
   // elemento della sidebar
