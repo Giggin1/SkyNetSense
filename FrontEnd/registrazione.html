@@ -1,81 +1,88 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Registrazione - Skynetsense</title>
-  
+
   <!-- Colleghiamo il nuovo foglio di stile -->
   <link rel="stylesheet" href="registrazione.css" />
 </head>
+
 <body>
 
   <!-- Header Semplificato -->
   <header>
-    <div class="brand">
+    <div class="logo-button">
       <div class="brand-logo">S</div>
       <div>
         <div class="brand-title">Skynetsense</div>
         <div class="brand-subtitle">Portale Utenti</div>
       </div>
     </div>
-    <!-- Pulsante per tornare alla mappa -->
-    <a href="/" class="btn-back">Torna alla Mappa</a>
-  </header>
 
-  <!-- Contenuto Principale -->
-  <main class="registration-container">
-    <div class="form-card">
-      <h2>Crea il tuo account</h2>
-      
-      <!-- Box per i messaggi (Gestito da JS) -->
-      <div id="reg-message" class="register-message"></div>
+    <button onclick="window.location.href='/'" class="btn-back-home">
+      Torna alla Home
+    </button>
+    </header>
 
-      <form id="registration-form">
-        <div class="form-group">
-          <label for="reg-nickname">Nickname</label>
-          <input id="reg-nickname" type="text" placeholder="Come vuoi essere chiamato?" required />
-        </div>
 
-        <div class="form-group">
-          <label for="reg-name">Nome</label>
-          <input id="reg-name" type="text" placeholder="Il tuo nome reale" required />
-        </div>
+    <!-- Contenuto Principale -->
+    <main class="registration-container">
+      <div class="form-card">
+        <h2>Crea il tuo account</h2>
 
-        <div class="form-group">
-          <label for="reg-surname">Cognome</label>
-          <input id="reg-surname" type="text" placeholder="Il tuo cognome" required />
-        </div>
+        <!-- Box per i messaggi (Gestito da JS) -->
+        <div id="reg-message" class="register-message"></div>
 
-        <div class="form-group">
-          <label for="reg-codice">Codice Fiscale</label>
-          <input id="reg-codice" type="text" placeholder="16 caratteri alfanumerici" maxlength="16" style="text-transform: uppercase;" required />
-          <small class="helper-text">Serve per identificare univocamente la tua utenza.</small>
-        </div>
+        <form id="registration-form">
+          <div class="form-group">
+            <label for="reg-nickname">Nickname</label>
+            <input id="reg-nickname" type="text" placeholder="Come vuoi essere chiamato?" required />
+          </div>
 
-        <div class="form-group">
-          <label for="reg-email">Email</label>
-          <input id="reg-email" type="email" placeholder="nome@esempio.com" required />
-        </div>
+          <div class="form-group">
+            <label for="reg-name">Nome</label>
+            <input id="reg-name" type="text" placeholder="Il tuo nome reale" required />
+          </div>
 
-        <div class="form-group">
-          <label for="reg-password">Password</label>
-          <input id="reg-password" type="password" placeholder="Scegli una password sicura" required />
-        </div>
+          <div class="form-group">
+            <label for="reg-surname">Cognome</label>
+            <input id="reg-surname" type="text" placeholder="Il tuo cognome" required />
+          </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn-submit">Registrati ora</button>
-        </div>
-        
-        <div class="form-footer">
-          Cliccando su Registrati accetti di condividere i dati delle tue stazioni meteo sulla rete pubblica.
-        </div>
-      </form>
-    </div>
-  </main>
+          <div class="form-group">
+            <label for="reg-codice">Codice Fiscale</label>
+            <input id="reg-codice" type="text" placeholder="16 caratteri alfanumerici" maxlength="16"
+              style="text-transform: uppercase;" required />
+            <small class="helper-text">Serve per identificare univocamente la tua utenza.</small>
+          </div>
 
-  <!-- Logica JS (File esterno) -->
-  <script src="/registrazione.js"></script>
+          <div class="form-group">
+            <label for="reg-email">Email</label>
+            <input id="reg-email" type="email" placeholder="nome@esempio.com" required />
+          </div>
+
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <input id="reg-password" type="password" placeholder="Scegli una password sicura" required />
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-submit">Registrati ora</button>
+          </div>
+
+          <div class="form-footer">
+            Cliccando su Registrati accetti di condividere i dati delle tue stazioni meteo sulla rete pubblica.
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <!-- Logica JS (File esterno) -->
+    <script src="/registrazione.js"></script>
 
 </body>
+
 </html>

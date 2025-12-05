@@ -2,6 +2,8 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from db import connessione
 from functools import wraps
+import time
+
 
 # Crea l'app Flask e usa la cartella FrontEnd come static folder (path inline)
 app = Flask(
@@ -11,6 +13,32 @@ app = Flask(
 )
 
 app.secret_key = "DATECIIL30ELODE"
+
+# --- Configurazione anti-bruteforce lato backend ---
+# quante volte si può sbagliare di fila prima del blocco
+MAX_ATTEMPTS = 5
+
+# durata del blocco in secondi (per ora sono 10 secondi)
+LOCK_SECONDS = 10
+
+# Dizionario in memoria:
+# chiave = "ip:email"
+# valore = {"fails": numero_tentativi, "lock_until": timestamp_unix}
+login_attempts = {}
+
+
+def get_client_ip():
+    """
+    Ritorna l'IP del client.
+    In futuro, se metterai un proxy (Nginx, ecc.), useremo X-Forwarded-For.
+    """
+    forwarded_for = request.headers.get("X-Forwarded-For", "")
+    if forwarded_for:
+        # può contenere più IP separati da virgola, prendiamo il primo
+        return forwarded_for.split(",")[0].strip()
+
+    return request.remote_addr or "unknown"
+
 
 @app.route("/", methods=["GET"])
 def home():
@@ -205,8 +233,12 @@ def register_user():
 # Endpoint per il login
 # Sostituisci la tua funzione login_user attuale con questa completa
 
+# Endpoint per il login
 @app.route("/api/public/login", methods=["POST"])
 def login_user():
+    # Timestamp attuale per la gestione del blocco
+    now = time.time()
+
     data = request.get_json(force=True)
     if not data:
         return jsonify({"error": "Payload non valido"}), 400
@@ -217,6 +249,28 @@ def login_user():
     if not email or not password:
         return jsonify({"error": "Inserisci email e password"}), 400
 
+    # ------------------------------
+    # 1) Controllo blocco per IP + email
+    # ------------------------------
+    ip = get_client_ip()
+    key = f"{ip}:{email}"
+
+    # Recupera (se esiste) il record per questa coppia IP+email
+    record = login_attempts.get(key, {"fails": 0, "lock_until": 0})
+
+    # Se l'utente è ancora bloccato, non facciamo nemmeno la query al DB
+    if record["lock_until"] > now:
+        remaining = int(record["lock_until"] - now)
+        return (
+            jsonify(
+                {"error": f"Troppi tentativi falliti. Riprova tra {remaining} secondi."}
+            ),
+            429,  # Too Many Requests
+        )
+
+    # ------------------------------
+    # 2) Verifica credenziali su DB
+    # ------------------------------
     conn = connessione()
     if conn is None:
         return jsonify({"error": "Errore di connessione al database"}), 500
@@ -228,40 +282,57 @@ def login_user():
             "SELECT CF, nickname FROM utenti WHERE email = %s AND password = %s",
             (email, password),
         )
-        
-        # === PARTE AGGIUNTA: Recupero del risultato e risposta ===
-        
-        account = cur.fetchone() # Recupera la riga trovata (se esiste)
+
+        account = cur.fetchone()  # Recupera la riga trovata (se esiste)
 
         if account:
+            # ✅ Login corretto: azzero i tentativi per questa coppia IP+email
+            if key in login_attempts:
+                login_attempts.pop(key, None)
+
             # account[0] = CF, account[1] = nickname
-            
             # ---> SALVIAMO I DATI IN SESSIONE <---
             session.permanent = True
             session["user_cf"] = account[0]
             session["nickname"] = account[1]
             session["logged_in"] = True
 
-            return jsonify({
-                "message": "Login effettuato con successo",
-                "nickname": account[1],
-                "redirect": "/" # Diciamo al frontend dove andare
-            }), 200
+            return (
+                jsonify(
+                    {
+                        "message": "Login effettuato con successo",
+                        "nickname": account[1],
+                        "redirect": "/",  # Diciamo al frontend dove andare
+                    }
+                ),
+                200,
+            )
         else:
+            # ❌ Login fallito: incremento il numero di tentativi
+            record["fails"] = record.get("fails", 0) + 1
+
+            if record["fails"] >= MAX_ATTEMPTS:
+                # Se supera la soglia, imposto il blocco
+                record["lock_until"] = now + LOCK_SECONDS
+                record["fails"] = 0  # opzionale: reset del contatore
+
+            login_attempts[key] = record
+
+            # Messaggio neutro, non diciamo se è email o password
             return jsonify({"error": "Email o password errati"}), 401
-        
-        # =========================================================
+
     except Exception as e:
         # In caso di errore SQL
-        print(f"Errore SQL: {e}") # Utile per il debug nella console
+        print(f"Errore SQL: {e}")  # Utile per il debug nella console
         conn.rollback()
         return jsonify({"error": "Errore interno del server"}), 500
     finally:
         try:
             cur.close()
-        except:
+        except Exception:
             pass
         conn.close()
+
 
 
 @app.route("/api/auth/logout")
