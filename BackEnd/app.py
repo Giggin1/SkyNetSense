@@ -1,9 +1,7 @@
-
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from db import connessione
 from functools import wraps
 import time
-
 
 # Crea l'app Flask e usa la cartella FrontEnd come static folder (path inline)
 app = Flask(
@@ -40,6 +38,16 @@ def get_client_ip():
     return request.remote_addr or "unknown"
 
 
+# Decoratore per proteggere le rotte che richiedono login autenticato 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("logged_in"):
+            return jsonify({"error": "Non autenticato"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @app.route("/", methods=["GET"])
 def home():
     # Restituisce il file index.html dalla cartella FrontEnd
@@ -51,11 +59,209 @@ def view_registrazione():
     # Cerca il file nella cartella static (FrontEnd)
     return app.send_static_file("registrazione.html")
 
+
 @app.route("/login")
 def view_login():
     # Cerca il file nella cartella static (FrontEnd)
     return app.send_static_file("login.html")
 
+
+# Endpoint protetto per ottenere le stazioni dell'utente loggato 
+@app.route("/api/auth/my-stations", methods=["GET"])
+@login_required
+def my_stations():
+    cf_utente = session.get("user_cf")
+
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore di connessione al database"}), 500
+
+    cur = conn.cursor()
+    try:
+        sql = """
+            SELECT
+                cf_utente,
+                nome_stazione,
+                data_installazione,
+                ultimo_dato_inviato,
+                paese,
+                regione,
+                citta,
+                provincia,
+                cap,
+                latitudine,
+                longitudine
+            FROM Stazioni
+            WHERE cf_utente = %s
+            ORDER BY nome_stazione
+        """
+        cur.execute(sql, (cf_utente,))
+        stazioni = []
+        for (
+            cf,
+            nome_stazione,
+            data_installazione,
+            ultimo_dato_inviato,
+            paese,
+            regione,
+            citta,
+            provincia,
+            cap,
+            latitudine,
+            longitudine
+        ) in cur:
+
+            stazioni.append({
+                "cf_utente": cf,
+                "nome_stazione": nome_stazione,
+                "data_installazione": (
+                    data_installazione.strftime("%Y-%m-%d")
+                    if data_installazione else None
+                ),
+                "ultimo_dato_inviato": (
+                    ultimo_dato_inviato.strftime("%Y-%m-%d %H:%M:%S")
+                    if ultimo_dato_inviato else None
+                ),
+                "paese": paese,
+                "regione": regione,
+                "citta": citta,
+                "provincia": provincia,
+                "cap": cap,
+                "latitudine": latitudine,
+                "longitudine": longitudine,
+            })
+
+        return jsonify(stazioni), 200
+
+    except Exception as e:
+        print("Errore my_stations:", e)
+        return jsonify({"error": "Errore interno del server"}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+# Endpoint protetto per aggiungere una nuova stazione
+@app.route("/api/auth/stations", methods=["POST"])
+@login_required
+def add_station():
+    cf_utente = session.get("user_cf")
+
+    data = request.get_json(force=True) or {}
+
+    nome_stazione = (data.get("nome_stazione") or "").strip()
+    paese         = (data.get("paese") or "").strip()
+    regione       = (data.get("regione") or "").strip()
+    citta         = (data.get("citta") or "").strip()
+    provincia     = (data.get("provincia") or "").strip()
+    cap           = (data.get("cap") or "").strip()
+
+    latitudine    = data.get("latitudine")
+    longitudine   = data.get("longitudine")
+
+    # Controlli minimi
+    if not nome_stazione:
+        return jsonify({"error": "nome_stazione obbligatorio"}), 400
+
+    # Possiamo richiedere almeno citta/regione + coordinate
+    if not citta or not regione or latitudine is None or longitudine is None:
+        return jsonify({"error": "citta, regione, latitudine e longitudine sono obbligatori"}), 400
+
+    try:
+        latitudine  = float(latitudine)
+        longitudine = float(longitudine)
+    except ValueError:
+        return jsonify({"error": "latitudine/longitudine non validi"}), 400
+
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore di connessione al database"}), 500
+
+    cur = conn.cursor()
+    try:
+        # Verifico che non esista già una stazione con lo stesso nome per questo utente
+        cur.execute(
+            "SELECT 1 FROM Stazioni WHERE cf_utente = %s AND nome_stazione = %s",
+            (cf_utente, nome_stazione)
+        )
+        if cur.fetchone() is not None:
+            return jsonify({"error": "Hai già una stazione con questo nome"}), 409
+
+        # Inserisco la stazione
+        sql_insert = """
+            INSERT INTO Stazioni
+            (cf_utente, nome_stazione, data_installazione, ultimo_dato_inviato,
+             paese, regione, citta, provincia, cap, latitudine, longitudine)
+            VALUES (%s, %s, CURDATE(), NULL,
+                    %s, %s, %s, %s, %s, %s, %s)
+        """
+        cur.execute(
+            sql_insert,
+            (
+                cf_utente,
+                nome_stazione,
+                paese,
+                regione,
+                citta,
+                provincia,
+                cap,
+                latitudine,
+                longitudine
+            )
+        )
+
+        conn.commit()
+        return jsonify({"message": "Stazione creata correttamente"}), 201
+
+    except Exception as e:
+        print("Errore add_station:", e)
+        conn.rollback()
+        return jsonify({"error": "Errore interno del server"}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+# Endpoint protetto per eliminare una stazione 
+@app.route("/api/auth/stations/<nome_stazione>", methods=["DELETE"])
+@login_required
+def delete_station(nome_stazione):
+    cf_utente = session.get("user_cf")
+
+    nome_stazione = nome_stazione.strip()
+    if not nome_stazione:
+        return jsonify({"error": "Nome stazione non valido"}), 400
+
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore di connessione al database"}), 500
+
+    cur = conn.cursor()
+    try:
+        # Verifico che la stazione esista ed appartenga a questo utente
+        cur.execute(
+            "SELECT 1 FROM Stazioni WHERE cf_utente = %s AND nome_stazione = %s",
+            (cf_utente, nome_stazione)
+        )
+        if cur.fetchone() is None:
+            return jsonify({"error": "Stazione non trovata o non appartenente all'utente"}), 404
+
+        # Cancello la stazione
+        cur.execute(
+            "DELETE FROM Stazioni WHERE cf_utente = %s AND nome_stazione = %s",
+            (cf_utente, nome_stazione)
+        )
+
+        conn.commit()
+        return jsonify({"message": "Stazione eliminata correttamente"}), 200
+
+    except Exception as e:
+        print("Errore delete_station:", e)
+        conn.rollback()
+        return jsonify({"error": "Errore interno del server"}), 500
+    finally:
+        cur.close()
+        conn.close()
 
 # Definiamo un endpoint GET /api/public/stazioni
 @app.route("/api/public/stazioni", methods=["GET"])
