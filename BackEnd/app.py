@@ -43,6 +43,7 @@ def get_stazioni():
 
     cur_st = conn.cursor()
 
+    # Query per prendere tutte le stazioni
     sql_stazioni = """
         SELECT
             cf_utente,
@@ -52,11 +53,13 @@ def get_stazioni():
             citta,
             provincia,
             cap,
+            latitudine,
+            longitudine,
             ultimo_dato_inviato
         FROM Stazioni
         ORDER BY regione, citta, nome_stazione
     """
-
+    # Eseguo la query
     cur_st.execute(sql_stazioni)
 
     stazioni = []
@@ -70,6 +73,8 @@ def get_stazioni():
         citta,
         provincia,
         cap,
+        latitudine,
+        longitudine,
         ultimo_dato_inviato
     ) in cur_st:
 
@@ -141,6 +146,8 @@ def get_stazioni():
             "citta": citta,
             "provincia": provincia,
             "cap": cap,
+            "latitudine": latitudine,
+            "longitudine": longitudine,
             "ultimo_dato": ultimo_dato_str,
             "dati": dati
         })
@@ -272,6 +279,107 @@ def session_status():
         })
     else:
         return jsonify({"logged_in": False})
+
+
+@app.route("/api/station/data", methods=["POST"])
+def ricevi_dati_stazione():
+    data = request.get_json(force=True)
+
+    cf_utente = data.get("cf_utente")
+    nome_stazione = data.get("nome_stazione")
+    dati = data.get("dati", [])  # lista di misure
+
+    # Controllo che il JSON abbia le info minime
+    if not cf_utente or not nome_stazione or not dati:
+        return jsonify({"error": "Payload incompleto"}), 400
+
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore di connessione al database"}), 500
+
+    cur = conn.cursor()
+    try:
+        # 1) Controllo che la stazione esista
+        cur.execute(
+            "SELECT 1 FROM Stazioni WHERE cf_utente = %s AND nome_stazione = %s",
+            (cf_utente, nome_stazione)
+        )
+        row = cur.fetchone()
+        if row is None:
+            return jsonify({"error": "Stazione non trovata"}), 404
+
+        # 2) Per ogni misura ricevuta
+        for misura in dati:
+            modello = misura.get("modello")            # es: 'MQ-135'
+            nome_sensore = misura.get("nome_sensore")  # es: 'MQ135_raw'
+            valore = misura.get("valore")
+
+            # salto le misure incomplete
+            if modello is None or nome_sensore is None or valore is None:
+                continue
+
+            # 2a) Verifico / creo il sensore in Sensori
+            cur.execute(
+                "SELECT 1 FROM Sensori WHERE modello = %s AND nome = %s",
+                (modello, nome_sensore)
+            )
+            if cur.fetchone() is None:
+                cur.execute(
+                    "INSERT INTO Sensori (modello, nome, unita) VALUES (%s, %s, %s)",
+                    (modello, nome_sensore, None)
+                )
+
+            # 2b) Verifico / creo l'associazione in Stazioni_Sensori
+            cur.execute(
+                """
+                SELECT 1 FROM Stazioni_Sensori
+                WHERE cf_utente = %s AND nome_stazione = %s
+                      AND modello = %s AND nome_sensore = %s
+                """,
+                (cf_utente, nome_stazione, modello, nome_sensore)
+            )
+            if cur.fetchone() is None:
+                cur.execute(
+                    """
+                    INSERT INTO Stazioni_Sensori
+                    (cf_utente, nome_stazione, modello, nome_sensore)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (cf_utente, nome_stazione, modello, nome_sensore)
+                )
+
+            # 2c) Inserisco il dato in Dati
+            cur.execute(
+                """
+                INSERT INTO Dati
+                (timestamp_lettura, cf_utente, nome_stazione, modello, nome_sensore, valore)
+                VALUES (NOW(), %s, %s, %s, %s, %s)
+                """,
+                (cf_utente, nome_stazione, modello, nome_sensore, valore)
+            )
+
+        # 3) Aggiorno ultimo_dato_inviato nella tabella Stazioni
+        cur.execute(
+            """
+            UPDATE Stazioni
+            SET ultimo_dato_inviato = NOW()
+            WHERE cf_utente = %s AND nome_stazione = %s
+            """,
+            (cf_utente, nome_stazione)
+        )
+
+        conn.commit()
+        return jsonify({"message": "Dati salvati correttamente"}), 201
+
+    except Exception as e:
+        print("Errore inserimento dati stazione:", e)
+        conn.rollback()
+        return jsonify({"error": "Errore interno del server"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
 
 # Avvia il server Flask se eseguiamo direttamente questo file
 if __name__ == "__main__":

@@ -99,3 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(type === 'success') messageBox.style.color = 'green';
   }
 });
+
+function backToHomepage(){
+  window.location.href = "/"; // Reindirizzo all'index 
+}

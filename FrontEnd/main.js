@@ -10,7 +10,7 @@ let map = null;
 function initMap() {
   if (map) return;
   // Centro sul Sud Italia (avvia la vista verso Napoli / Campania)
-  map = L.map("map").setView([40.5, 14.0], 6);
+  map = L.map("map").setView([40.9, 14.2], 7);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 18,
@@ -62,7 +62,7 @@ let stationListDiv = null;
 
 
 // ==============================
-// 2. Funzione che disegna stazioni su mappa + sidebar
+// 2. Funzione che disegna i puntini delle stazioni su mappa + sidebar
 // ==============================
 
 function renderStazioni(stazioni) {
@@ -71,15 +71,26 @@ function renderStazioni(stazioni) {
   stationListDiv.innerHTML = "";
 
   stazioni.forEach((s) => {
-    const coords = getCoordsForCity(s.citta);
+
+    // Se sono fornite lat/lng usiamo quelle, altrimenti usiamo la città
+    let coords;
+    if (typeof s.latitudine === "number" && typeof s.longitudine === "number") {
+    
+      coords = { lat: s.latitudine, lng: s.longitudine }; // usa lat/lng forniti
+
+    } else {
+
+      coords = getCoordsForCity(s.citta); // altrimenti usa città
+
+    }
 
     // Marker verde sulla mappa
-    const marker = L.circleMarker([coords.lat, coords.lng], {
-      radius: 8,
+    const marker = L.circle([coords.lat, coords.lng], {
+      radius: 70,
       color: "#22c55e",
       weight: 2,
       fillColor: "#22c55e",
-      fillOpacity: 0.9,
+      fillOpacity: 0.25,
     }).addTo(map);
 
     // Popup sulla mappa
@@ -142,7 +153,7 @@ function renderStazioni(stazioni) {
 
     // Click sulla card → centra la mappa e apre il popup
     card.addEventListener("click", () => {
-      map.setView([coords.lat, coords.lng], 11);
+      map.setView([coords.lat, coords.lng], 15); // zooma sulla stazione quando si clicca sulla card
       marker.openPopup();
     });
 
@@ -225,6 +236,12 @@ document.addEventListener("DOMContentLoaded", () => {
   checkLoginStatus();
 });
 
+
+function ricaricaMappa() {
+  if (map) {
+    map.setView([40.9, 14.2], 7); // Centro e zoom iniziali
+  }
+}
 
 // Avvia subito il caricamento quando la pagina è pronta
 document.addEventListener("DOMContentLoaded", () => {

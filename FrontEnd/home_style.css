@@ -33,6 +33,19 @@ header {
   );
 }
 
+/* Logo button */
+.logo-button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+
+
 /* Register button */
 .btn-register {
   background: transparent;
@@ -98,9 +111,10 @@ header {
 }
 
 .brand-title {
-  font-weight: 600;
+   font-weight: 600;
   letter-spacing: 0.04em;
   font-size: 1.05rem;
+  color: #a7f3d0; /* colore della scritta "Skynetsense" */
 }
 
 .brand-subtitle {
