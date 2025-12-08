@@ -51,19 +51,19 @@ def login_required(f):
 @app.route("/", methods=["GET"])
 def home():
     # Restituisce il file index.html dalla cartella FrontEnd
-    return app.send_static_file("index.html")
+    return app.send_static_file("HTML/index.html")
 
 
 @app.route("/registrazione")
 def view_registrazione():
     # Cerca il file nella cartella static (FrontEnd)
-    return app.send_static_file("registrazione.html")
+    return app.send_static_file("HTML/registrazione.html")
 
 
 @app.route("/login")
 def view_login():
     # Cerca il file nella cartella static (FrontEnd)
-    return app.send_static_file("login.html")
+    return app.send_static_file("HTML/login.html")
 
 
 # Endpoint protetto per ottenere le stazioni dell'utente loggato 

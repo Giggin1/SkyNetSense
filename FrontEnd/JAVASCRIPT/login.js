@@ -151,7 +151,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Funzione usata dal bottone "Torna alla Home"
-function backToHomepage() {
-  window.location.href = "/"; // Reindirizzo alla home
-}
+

@@ -229,13 +229,34 @@ header {
   border: 1px solid rgba(34, 197, 94, 0.7);
 }
 
-.btn-back-home{
+.btn-back-home {
   background: transparent;
-  border: 1px solid rgba(148,163,184,0.12);
+  border: 1px solid rgba(148, 163, 184, 0.12);
   color: #9ca3af;
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.08s ease;
+}
+
+.btn-back-home:hover {
+  background-color: rgba(15, 23, 42, 0.85);
+  color: #e5e7eb;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.7);
+  transform: translateY(-1px);
+}
+
+.btn-back-home:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.6);
 }
 
 /* --- RESPONSIVE --- */
