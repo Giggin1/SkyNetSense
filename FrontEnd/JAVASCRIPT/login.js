@@ -106,8 +106,8 @@ document.addEventListener("DOMContentLoaded", () => {
       form.reset();
 
       setTimeout(() => {
-        window.location.href = "/";
-      }, 1500);
+        window.location.href = "/stazioni";
+      });
     } catch (error) {
       console.error("Errore CATCH:", error);
       showMessage(

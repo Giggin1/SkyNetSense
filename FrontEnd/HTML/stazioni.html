@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skynetsense - Mappa stazioni</title>
+
+
+  <!-- Il tuo CSS -->
+  <link rel="stylesheet" href="CSS/stazioni.css" />
+</head>
+
+<body>
+  <header>
+    <button onclick="ritornoAllaHome()" class="logo-button" id="logo-button"> <!-- Logo Skynetsense che ti riporta alla schermata principale del login -->
+      <div class="brand-logo">S</div>
+      <div>
+        <div class="brand-title">SkyNetSense</div>
+        <div class="brand-subtitle">Rete di stazioni meteo distribuite</div>
+      </div>
+    </button>
+    <div style="display:flex;align-items:center;gap:0.8rem;">
+      <div class="header-right" id="user-panel" style="display:flex; gap:10px; align-items:center;">
+        <div class="header-right">
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <main>
+    <div id="storico"></div> <!-- Serve per delineare lo spazio dove verrano visualizzati lo storico dei dati, dividendollo dalle card delle stazioni -->
+
+    <aside id="sidebar">
+       <aside id="sidebar2">
+
+        <div class="subtitle">Le mie stazioni</div>
+
+      </aside>
+
+      <div id="station-list"></div> 
+
+      </div>
+    </aside>
+
+
+<script src="JAVASCRIPT/stazioni.js"></script>
+</body>
+
+</html>

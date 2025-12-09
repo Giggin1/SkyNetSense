@@ -30,14 +30,14 @@ function initMap() {
   window.addEventListener("resize", () => {
     try {
       map.invalidateSize();
-    } catch (e) {}
+    } catch (e) { }
   });
   window.addEventListener("orientationchange", () => {
     // piccolo delay per permettere al browser di aggiornare layout
     setTimeout(() => {
       try {
         map.invalidateSize();
-      } catch (e) {}
+      } catch (e) { }
     }, 200);
   });
 }
@@ -75,7 +75,7 @@ function renderStazioni(stazioni) {
     // Se sono fornite lat/lng usiamo quelle, altrimenti usiamo la città
     let coords;
     if (typeof s.latitudine === "number" && typeof s.longitudine === "number") {
-    
+
       coords = { lat: s.latitudine, lng: s.longitudine }; // usa lat/lng forniti
 
     } else {
@@ -126,28 +126,26 @@ function renderStazioni(stazioni) {
       <div class="station-data">
         <div class="pill">
           <span class="pill-dot"></span>
-          ${
-            s.ultimo_dato
-              ? "Ultimo dato: " + s.ultimo_dato
-              : "Nessun dato disponibile"
-          }
+          ${s.ultimo_dato
+        ? "Ultimo dato: " + s.ultimo_dato
+        : "Nessun dato disponibile"
+      }
         </div>
-        ${
-          s.dati && Object.keys(s.dati).length > 0
-            ? Object.entries(s.dati)
-                .map(
-                  ([k, v]) => `
+        ${s.dati && Object.keys(s.dati).length > 0
+        ? Object.entries(s.dati)
+          .map(
+            ([k, v]) => `
           <div class="data-line">
             <span class="data-key">${k}</span>
             <span class="data-value">${v}</span>
           </div>`
-                )
-                .join("")
-            : `<div class="data-line">
+          )
+          .join("")
+        : `<div class="data-line">
                  <span class="data-key">Dati</span>
                  <span class="data-value">Nessun dato</span>
                </div>`
-        }
+      }
       </div>
     `;
 
@@ -160,12 +158,12 @@ function renderStazioni(stazioni) {
     stationListDiv.appendChild(card);
   });
 
-    // Assicuriamoci che la mappa ricalcoli le dimensioni dopo aver inserito i marker
-    if (map) {
-      try {
-        map.invalidateSize();
-      } catch (e) {}
-    }
+  // Assicuriamoci che la mappa ricalcoli le dimensioni dopo aver inserito i marker
+  if (map) {
+    try {
+      map.invalidateSize();
+    } catch (e) { }
+  }
 }
 
 // ==============================
@@ -203,6 +201,9 @@ async function checkLoginStatus() {
       // UTENTE LOGGATO: Mostra Benvenuto e Logout
       userPanel.innerHTML = `
         <span style="font-weight:bold; color:#333;">Ciao, ${data.nickname}</span>
+
+        <button onclick="vaiAlleStazioni()"; class="btn-stazioni" style="cursor:pointer; background:#ef4444; border:none; color:white; padding: 0.5rem 1rem; border-radius:4px;">Vai alle stazioni</button>
+        
         <button onclick="doLogout()" class="btn-login" style="cursor:pointer; background:#ef4444; border:none; color:white; padding: 0.5rem 1rem; border-radius:4px;">Logout</button>
       `;
     } else {
@@ -219,15 +220,20 @@ async function checkLoginStatus() {
 }
 
 // Funzione per il Logout
-async function doLogout() {
-  await fetch("/api/auth/logout");
+function doLogout() {
+  fetch("/api/auth/logout");
   window.location.reload(); // Ricarica la pagina per resettare la vista
+}
+
+//funzione che riporta una volta cliccato al file delle stazioni 
+function vaiAlleStazioni() {
+  window.location.href = "/stazioni"; // Reindirizza alla pagina di gestione delle stazioni
 }
 
 // Aggiungi la chiamata dentro DOMContentLoaded esistente
 document.addEventListener("DOMContentLoaded", () => {
   // ... codice esistente (initMap, stationListDiv) ...
-  
+
   stationListDiv = document.getElementById("station-list");
   initMap();
   caricaStazioni();

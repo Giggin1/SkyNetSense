@@ -81,8 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Torna alla home dopo 2 secondi
       setTimeout(() => {
-        window.location.href = "/";
-      }, 2000);
+        window.location.href = "/login";
+      });
 
     } catch (error) {
       console.error("Errore CATCH:", error);

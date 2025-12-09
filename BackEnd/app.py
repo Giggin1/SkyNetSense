@@ -66,6 +66,12 @@ def view_login():
     return app.send_static_file("HTML/login.html")
 
 
+@app.route("/stazioni")
+def view_stazioni():
+    # Restituisce il file Stazioni.html dalla cartella FrontEnd
+    return app.send_static_file("HTML/stazioni.html")
+
+
 # Endpoint protetto per ottenere le stazioni dell'utente loggato 
 @app.route("/api/auth/my-stations", methods=["GET"])
 @login_required
