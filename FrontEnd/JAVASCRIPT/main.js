@@ -1,12 +1,9 @@
-"use strict";
 
-// ==============================
-// 1. Inizializza mappa in modo robusto (ritardato)
-//    per evitare che la mappa non venga renderizzata su mobile
-// ==============================
 
+
+//funzione utile a inizializzare la mappa, utilizzeremo Leaflet.js,
+//  una libreria open source di mappa interattiva
 let map = null;
-
 function initMap() {
   if (map) return;
   // Centro sul Sud Italia (avvia la vista verso Napoli / Campania)
@@ -16,55 +13,13 @@ function initMap() {
     maxZoom: 18,
     attribution: "&copy; OpenStreetMap contributors",
   }).addTo(map);
-
-  // Dopo un breve delay, invalida la size per forzare il render corretto
-  setTimeout(() => {
-    try {
-      map.invalidateSize();
-    } catch (e) {
-      // ignora
-    }
-  }, 200);
-
-  // Ricalcola dimensione su resize/orientation
-  window.addEventListener("resize", () => {
-    try {
-      map.invalidateSize();
-    } catch (e) { }
-  });
-  window.addEventListener("orientationchange", () => {
-    // piccolo delay per permettere al browser di aggiornare layout
-    setTimeout(() => {
-      try {
-        map.invalidateSize();
-      } catch (e) { }
-    }, 200);
-  });
 }
 
-// Mappa città -> coordinate approssimative
-const cityCoords = {
-  Milano: { lat: 45.4642, lng: 9.19 },
-  Viterbo: { lat: 42.42, lng: 12.11 },
-  Roma: { lat: 41.9028, lng: 12.4964 },
-  Napoli: { lat: 40.8518, lng: 14.2681 },
-};
 
-function getCoordsForCity(citta) {
-  if (cityCoords[citta]) {
-    return cityCoords[citta];
-  }
-  // fallback: centro Italia
-  return { lat: 41.8719, lng: 12.5674 };
-}
 
+
+//funzione che renderizza le stazioni sulla mappa e nella sidebar a destra
 let stationListDiv = null;
-
-
-// ==============================
-// 2. Funzione che disegna i puntini delle stazioni su mappa + sidebar
-// ==============================
-
 function renderStazioni(stazioni) {
   // pulisco la lista laterale
   if (!stationListDiv) stationListDiv = document.getElementById("station-list");
@@ -72,28 +27,18 @@ function renderStazioni(stazioni) {
 
   stazioni.forEach((s) => {
 
-    // Se sono fornite lat/lng usiamo quelle, altrimenti usiamo la città
-    let coords;
-    if (typeof s.latitudine === "number" && typeof s.longitudine === "number") {
-
-      coords = { lat: s.latitudine, lng: s.longitudine }; // usa lat/lng forniti
-
-    } else {
-
-      coords = getCoordsForCity(s.citta); // altrimenti usa città
-
-    }
+    let coords = { lat: s.latitudine, lng: s.longitudine }; 
 
     // Marker verde sulla mappa
     const marker = L.circle([coords.lat, coords.lng], {
-      radius: 70,
+      radius: 200,
       color: "#22c55e",
       weight: 2,
       fillColor: "#22c55e",
       fillOpacity: 0.25,
     }).addTo(map);
 
-    // Popup sulla mappa
+    // se si clicca sul marker, mostra i dettagli in un popup
     let popupHtml = `<strong>${s.nome_stazione}</strong><br/>
       ${s.citta || ""} ${s.regione ? "(" + s.regione + ")" : ""}<br/>`;
 
@@ -108,11 +53,9 @@ function renderStazioni(stazioni) {
       for (const [chiave, valore] of Object.entries(s.dati)) {
         popupHtml += `${chiave}: ${valore}<br/>`;
       }
-    }
+    }marker.bindPopup(popupHtml);
 
-    marker.bindPopup(popupHtml);
-
-    // Card nella sidebar
+    // creiamo la card nella sidebar a destra
     const card = document.createElement("div");
     card.className = "station-card";
     card.innerHTML = `
@@ -157,19 +100,13 @@ function renderStazioni(stazioni) {
 
     stationListDiv.appendChild(card);
   });
-
-  // Assicuriamoci che la mappa ricalcoli le dimensioni dopo aver inserito i marker
-  if (map) {
-    try {
-      map.invalidateSize();
-    } catch (e) { }
-  }
 }
 
-// ==============================
-// 3. Chiama il backend per caricare le stazioni
-// ==============================
 
+
+
+
+//funzione usata per caricare su un file json tutte le stazioni presenti sul db
 async function caricaStazioni() {
   try {
     // visto che index.html viene servito da Flask su http://127.0.0.1:5000/
@@ -188,6 +125,10 @@ async function caricaStazioni() {
       '<div style="font-size:0.85rem;color:#fca5a5;">Errore nel caricamento dei dati. Verifica che il server Flask (app.py) sia in esecuzione.</div>';
   }
 }
+
+
+
+
 
 async function checkLoginStatus() {
   const userPanel = document.getElementById("user-panel");
@@ -219,28 +160,25 @@ async function checkLoginStatus() {
   }
 }
 
+
+
+
+
+
 // Funzione per il Logout
-function doLogout() {
-  fetch("/api/auth/logout");
+async function doLogout() {
+  await fetch("/api/auth/logout");
   window.location.reload(); // Ricarica la pagina per resettare la vista
 }
+
+
+
 
 //funzione che riporta una volta cliccato al file delle stazioni 
 function vaiAlleStazioni() {
   window.location.href = "/stazioni"; // Reindirizza alla pagina di gestione delle stazioni
 }
 
-// Aggiungi la chiamata dentro DOMContentLoaded esistente
-document.addEventListener("DOMContentLoaded", () => {
-  // ... codice esistente (initMap, stationListDiv) ...
-
-  stationListDiv = document.getElementById("station-list");
-  initMap();
-  caricaStazioni();
-
-  // ---> NUOVA CHIAMATA
-  checkLoginStatus();
-});
 
 
 function ricaricaMappa() {
@@ -248,6 +186,7 @@ function ricaricaMappa() {
     map.setView([40.9, 14.2], 7); // Centro e zoom iniziali
   }
 }
+
 
 // Avvia subito il caricamento quando la pagina è pronta
 document.addEventListener("DOMContentLoaded", () => {
@@ -257,6 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // inizializza la mappa e carica i dati
   initMap();
   caricaStazioni();
+  checkLoginStatus();
 });
 
 

@@ -17,7 +17,7 @@ app.secret_key = "DATECIIL30ELODE"
 MAX_ATTEMPTS = 5
 
 # durata del blocco in secondi (per ora sono 10 secondi)
-LOCK_SECONDS = 10
+LOCK_SECONDS = 20
 
 # Dizionario in memoria:
 # chiave = "ip:email"
@@ -72,7 +72,12 @@ def view_stazioni():
     return app.send_static_file("HTML/stazioni.html")
 
 
-# Endpoint protetto per ottenere le stazioni dell'utente loggato 
+
+
+
+
+
+#Api per ottenere il file json delle stazioni relative all'utente loggato
 @app.route("/api/auth/my-stations", methods=["GET"])
 @login_required
 def my_stations():
@@ -94,9 +99,9 @@ def my_stations():
                 regione,
                 citta,
                 provincia,
-                cap,
-                latitudine,
-                longitudine
+                latitudine.
+                longitudine,
+                cap
             FROM Stazioni
             WHERE cf_utente = %s
             ORDER BY nome_stazione
@@ -112,9 +117,9 @@ def my_stations():
             regione,
             citta,
             provincia,
-            cap,
-            latitudine,
-            longitudine
+            latiudine,
+            longitudine,
+            cap
         ) in cur:
 
             stazioni.append({
@@ -133,8 +138,8 @@ def my_stations():
                 "citta": citta,
                 "provincia": provincia,
                 "cap": cap,
-                "latitudine": latitudine,
-                "longitudine": longitudine,
+                "latiudine": latiudine,
+                "longitudine": longitudine
             })
 
         return jsonify(stazioni), 200
@@ -147,127 +152,8 @@ def my_stations():
         conn.close()
 
 
-# Endpoint protetto per aggiungere una nuova stazione
-@app.route("/api/auth/stations", methods=["POST"])
-@login_required
-def add_station():
-    cf_utente = session.get("user_cf")
-
-    data = request.get_json(force=True) or {}
-
-    nome_stazione = (data.get("nome_stazione") or "").strip()
-    paese         = (data.get("paese") or "").strip()
-    regione       = (data.get("regione") or "").strip()
-    citta         = (data.get("citta") or "").strip()
-    provincia     = (data.get("provincia") or "").strip()
-    cap           = (data.get("cap") or "").strip()
-
-    latitudine    = data.get("latitudine")
-    longitudine   = data.get("longitudine")
-
-    # Controlli minimi
-    if not nome_stazione:
-        return jsonify({"error": "nome_stazione obbligatorio"}), 400
-
-    # Possiamo richiedere almeno citta/regione + coordinate
-    if not citta or not regione or latitudine is None or longitudine is None:
-        return jsonify({"error": "citta, regione, latitudine e longitudine sono obbligatori"}), 400
-
-    try:
-        latitudine  = float(latitudine)
-        longitudine = float(longitudine)
-    except ValueError:
-        return jsonify({"error": "latitudine/longitudine non validi"}), 400
-
-    conn = connessione()
-    if conn is None:
-        return jsonify({"error": "Errore di connessione al database"}), 500
-
-    cur = conn.cursor()
-    try:
-        # Verifico che non esista già una stazione con lo stesso nome per questo utente
-        cur.execute(
-            "SELECT 1 FROM Stazioni WHERE cf_utente = %s AND nome_stazione = %s",
-            (cf_utente, nome_stazione)
-        )
-        if cur.fetchone() is not None:
-            return jsonify({"error": "Hai già una stazione con questo nome"}), 409
-
-        # Inserisco la stazione
-        sql_insert = """
-            INSERT INTO Stazioni
-            (cf_utente, nome_stazione, data_installazione, ultimo_dato_inviato,
-             paese, regione, citta, provincia, cap, latitudine, longitudine)
-            VALUES (%s, %s, CURDATE(), NULL,
-                    %s, %s, %s, %s, %s, %s, %s)
-        """
-        cur.execute(
-            sql_insert,
-            (
-                cf_utente,
-                nome_stazione,
-                paese,
-                regione,
-                citta,
-                provincia,
-                cap,
-                latitudine,
-                longitudine
-            )
-        )
-
-        conn.commit()
-        return jsonify({"message": "Stazione creata correttamente"}), 201
-
-    except Exception as e:
-        print("Errore add_station:", e)
-        conn.rollback()
-        return jsonify({"error": "Errore interno del server"}), 500
-    finally:
-        cur.close()
-        conn.close()
 
 
-# Endpoint protetto per eliminare una stazione 
-@app.route("/api/auth/stations/<nome_stazione>", methods=["DELETE"])
-@login_required
-def delete_station(nome_stazione):
-    cf_utente = session.get("user_cf")
-
-    nome_stazione = nome_stazione.strip()
-    if not nome_stazione:
-        return jsonify({"error": "Nome stazione non valido"}), 400
-
-    conn = connessione()
-    if conn is None:
-        return jsonify({"error": "Errore di connessione al database"}), 500
-
-    cur = conn.cursor()
-    try:
-        # Verifico che la stazione esista ed appartenga a questo utente
-        cur.execute(
-            "SELECT 1 FROM Stazioni WHERE cf_utente = %s AND nome_stazione = %s",
-            (cf_utente, nome_stazione)
-        )
-        if cur.fetchone() is None:
-            return jsonify({"error": "Stazione non trovata o non appartenente all'utente"}), 404
-
-        # Cancello la stazione
-        cur.execute(
-            "DELETE FROM Stazioni WHERE cf_utente = %s AND nome_stazione = %s",
-            (cf_utente, nome_stazione)
-        )
-
-        conn.commit()
-        return jsonify({"message": "Stazione eliminata correttamente"}), 200
-
-    except Exception as e:
-        print("Errore delete_station:", e)
-        conn.rollback()
-        return jsonify({"error": "Errore interno del server"}), 500
-    finally:
-        cur.close()
-        conn.close()
 
 # Definiamo un endpoint GET /api/public/stazioni
 @app.route("/api/public/stazioni", methods=["GET"])
@@ -288,14 +174,14 @@ def get_stazioni():
         SELECT
             cf_utente,
             nome_stazione,
+            ultimo_dato_inviato,
             paese,
             regione,
             citta,
             provincia,
             cap,
             latitudine,
-            longitudine,
-            ultimo_dato_inviato
+            longitudine
         FROM Stazioni
         ORDER BY regione, citta, nome_stazione
     """
@@ -306,16 +192,16 @@ def get_stazioni():
 
     # scorro tutte le stazioni
     for (
-        cf_utente,
-        nome_stazione,
-        paese,
-        regione,
-        citta,
-        provincia,
-        cap,
-        latitudine,
-        longitudine,
-        ultimo_dato_inviato
+            cf_utente,
+            nome_stazione,
+            ultimo_dato_inviato,
+            paese,
+            regione,
+            citta,
+            provincia,
+            cap,
+            latitudine,
+            longitudine
     ) in cur_st:
 
         # ==============================
@@ -386,10 +272,10 @@ def get_stazioni():
             "citta": citta,
             "provincia": provincia,
             "cap": cap,
-            "latitudine": latitudine,
-            "longitudine": longitudine,
             "ultimo_dato": ultimo_dato_str,
-            "dati": dati
+            "dati": dati,
+            "latitudine": latitudine,
+            "longitudine": longitudine
         })
 
     cur_st.close()
@@ -498,9 +384,7 @@ def login_user():
         account = cur.fetchone()  # Recupera la riga trovata (se esiste)
 
         if account:
-            # ✅ Login corretto: azzero i tentativi per questa coppia IP+email
-            if key in login_attempts:
-                login_attempts.pop(key, None)
+           
 
             # account[0] = CF, account[1] = nickname
             # ---> SALVIAMO I DATI IN SESSIONE <---
@@ -519,19 +403,6 @@ def login_user():
                 ),
                 200,
             )
-        else:
-            # ❌ Login fallito: incremento il numero di tentativi
-            record["fails"] = record.get("fails", 0) + 1
-
-            if record["fails"] >= MAX_ATTEMPTS:
-                # Se supera la soglia, imposto il blocco
-                record["lock_until"] = now + LOCK_SECONDS
-                record["fails"] = 0  # opzionale: reset del contatore
-
-            login_attempts[key] = record
-
-            # Messaggio neutro, non diciamo se è email o password
-            return jsonify({"error": "Email o password errati"}), 401
 
     except Exception as e:
         # In caso di errore SQL
@@ -554,7 +425,7 @@ def logout():
 
 @app.route("/api/auth/status")
 def session_status():
-    if "logged_in" in session:
+    if session.get("logged_in"):
         return jsonify({
             "logged_in": True, 
             "nickname": session["nickname"],

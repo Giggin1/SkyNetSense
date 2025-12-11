@@ -10,23 +10,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // -----------------------------
-  // Protezione base anti-bruteforce lato client
-  // -----------------------------
+  //semplice blocco per eventuali attacchi di forza bruta
   const MAX_ATTEMPTS = 5;          // dopo 5 errori...
   const LOCK_TIME_MS = 10 * 1000;  // ...blocca per 10 secondi
   let failedAttempts = 0;
   let lockUntil = 0;
   const defaultBtnLabel = submitBtn.textContent || "Login";
-
-  // ✅ Provo a recuperare un eventuale blocco salvato nel localStorage
-  const savedLockUntil = localStorage.getItem("loginLockUntil");
-  if (savedLockUntil) {
-    const parsed = parseInt(savedLockUntil, 10);
-    if (!isNaN(parsed)) {
-      lockUntil = parsed;
-    }
-  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -42,6 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       return;
     }
+
+
+
 
     const emailInput = document.getElementById("login-email");
     const passwordInput = document.getElementById("login-password");
@@ -97,8 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
       // Se arrivo qui, login OK
       failedAttempts = 0;
       lockUntil = 0;
-      // ✅ tolgo il blocco salvato
-      localStorage.removeItem("loginLockUntil");
 
       showMessage("Login completato! Reindirizzamento...", "success");
       console.log("Login effettuato con successo:", result);
@@ -106,12 +96,12 @@ document.addEventListener("DOMContentLoaded", () => {
       form.reset();
 
       setTimeout(() => {
-        window.location.href = "/stazioni";
+        window.location.href = "/";
       });
     } catch (error) {
       console.error("Errore CATCH:", error);
       showMessage(
-        "Impossibile contattare il server. Controlla la connessione e riprova.",
+        "dati errati.",
         "error"
       );
 
@@ -120,28 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Gestione tentativi falliti lato client
-  function handleFailedAttempt(serverMessage) {
-    failedAttempts++;
-
-    if (failedAttempts >= MAX_ATTEMPTS) {
-      // Blocco locale per X secondi
-      lockUntil = Date.now() + LOCK_TIME_MS;
-      failedAttempts = 0;
-
-      // ✅ salvo il blocco anche nel localStorage
-      localStorage.setItem("loginLockUntil", String(lockUntil));
-
-      const seconds = Math.round(LOCK_TIME_MS / 1000);
-      showMessage(
-        `Troppi tentativi falliti. Attendi ${seconds} secondi prima di riprovare.`,
-        "error"
-      );
-    } else {
-      showMessage(serverMessage || "Email o password non validi.", "error");
-    }
-  }
-
+  
   // Mostra messaggi usando il box in alto
   function showMessage(text, type) {
     messageBox.textContent = text;
