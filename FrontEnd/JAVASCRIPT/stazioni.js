@@ -4,7 +4,8 @@ function ritornoAllaHome() {
 
 async function caricaStazioni() {
   try {
-    const response = await fetch("/api/public/stazioni");
+    console.log("Caricamento stazioni...");
+    const response = await fetch("/api/auth/my-stations");
 
     if (!response.ok) {
       throw new Error("Errore nella risposta dal server");
