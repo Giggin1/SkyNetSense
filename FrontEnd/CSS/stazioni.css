@@ -20,7 +20,8 @@ body {
 
 
 
-header { /* Stile della barra superiore (Dove si trova il logo in pratica) */    
+header {
+  /* Stile della barra superiore (Dove si trova il logo in pratica) */
   height: 56px;
   padding: 0 1.5rem;
   display: flex;
@@ -28,15 +29,14 @@ header { /* Stile della barra superiore (Dove si trova il logo in pratica) */
   justify-content: space-between;
   border-bottom: 1px solid rgba(148, 163, 184, 0.12);
   backdrop-filter: blur(10px);
-  background: linear-gradient(
-    to right,
-    rgba(15, 23, 42, 0.9),
-    rgba(15, 23, 42, 0.6)
-  );
+  background: linear-gradient(to right,
+      rgba(15, 23, 42, 0.9),
+      rgba(15, 23, 42, 0.6));
 }
 
 
-.logo-button { /* Logo button */
+.logo-button {
+  /* Logo button */
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -47,7 +47,8 @@ header { /* Stile della barra superiore (Dove si trova il logo in pratica) */
 }
 
 
-.brand-logo { /* Stile del logo */
+.brand-logo {
+  /* Stile del logo */
   width: 26px;
   height: 26px;
   border-radius: 999px;
@@ -62,10 +63,11 @@ header { /* Stile della barra superiore (Dove si trova il logo in pratica) */
 }
 
 .brand-title {
-   font-weight: 600;
+  font-weight: 600;
   letter-spacing: 0.04em;
   font-size: 1.05rem;
-  color: #a7f3d0; /* colore della scritta "Skynetsense" */
+  color: #a7f3d0;
+  /* colore della scritta "Skynetsense" */
 }
 
 .brand-subtitle {
@@ -136,9 +138,10 @@ main {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  border-radius: 20px;   /* bordo arrotondato */
-  display: flex;                
-  align-items: center;  
+  border-radius: 20px;
+  /* bordo arrotondato */
+  display: flex;
+  align-items: center;
 }
 
 .add-station-button {
@@ -153,24 +156,26 @@ main {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  border-radius: 20px;   /* bordo arrotondato */
-  display: flex;                
-  align-items: center;  
+  border-radius: 20px;
+  /* bordo arrotondato */
+  display: flex;
+  align-items: center;
   color: #a7f3d0;
 }
 
 
-.subtitle{
-    font-size: 1.2rem;  /* Dimensione del testo  */
-    font-weight: bold;
-    color: #068d26;
-    margin-bottom: 1,5rem;
-    align-items: center;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    font-size: 1.05rem;
-    color: #a7f3d0; 
-    
+.subtitle {
+  font-size: 1.2rem;
+  /* Dimensione del testo  */
+  font-weight: bold;
+  color: #068d26;
+  margin-bottom: 1, 5rem;
+  align-items: center;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-size: 1.05rem;
+  color: #a7f3d0;
+
 }
 
 .legend {
@@ -207,9 +212,11 @@ main {
 #station-list::-webkit-scrollbar {
   width: 6px;
 }
+
 #station-list::-webkit-scrollbar-track {
   background: transparent;
 }
+
 #station-list::-webkit-scrollbar-thumb {
   background: #1f2937;
   border-radius: 999px;
@@ -262,3 +269,71 @@ main {
   margin-bottom: 0.25rem;
 }
 
+#visualizzazioneModale {
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+
+}
+
+#station-form {
+    background: white; 
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%; 
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input {
+
+    width: 100%;
+
+    padding: 10px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 5px;
+
+    box-sizing: border-box; 
+
+}
+
+#form-actions {
+
+    margin-top: 20px;
+
+    text-align: right;
+
+}.btn-submit {
+
+    background-color: #28a745; 
+
+    color: white;
+
+    border: none;
+
+    padding: 10px 15px;
+
+    border-radius: 5px;
+
+    cursor: pointer;
+
+}

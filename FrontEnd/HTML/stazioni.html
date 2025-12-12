@@ -25,7 +25,7 @@
       <button onclick="window.location.href='/'" class="btn-back-home">
         Torna alla Home
       </button>
-      
+
   </header>
 
   </button>
@@ -52,7 +52,30 @@
 
       <div id="station-list"></div>
 
+      <div id="visualizzazioneModale" style="display: none">
+      <form id="station-form">
+        <h2>Dati Nuova Stazione</h2>
 
+        <div class="form-group">
+          <label for="station-name">Nome della Stazione</label>
+          <input id="station-name" type="text" placeholder="Esempio: Stazione Centrale" required />
+        </div>
+
+        <div class="form-group">
+          <label for="station-lat">Latitudine</label>
+          <input id="station-lat" type="number" step="any" placeholder="Esempio: 45.465421" required />
+        </div>
+
+        <div class="form-group">
+          <label for="station-lng">Longitudine</label>
+          <input id="station-lng" type="number" step="any" placeholder="Esempio: 9.185924" required />
+        </div>
+
+        <div id="form-actions">
+          <button type="submit" class="btn-submit">Salva Stazione</button>
+        </div>
+      </form>
+    </div>
       <!-- Bottone per aggiungere una nuova stazione -->
       <button class="add-station-button"> Aggiungi stazione </button>
 

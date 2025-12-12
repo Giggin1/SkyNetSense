@@ -36,3 +36,9 @@ function mostraStazioni(stazioni) {
 }
 
 caricaStazioni();
+
+function mostraForm(){
+const formBox = document.getElementById("visualizzazioneModale");
+
+formBox.style.display="flex";
+}
