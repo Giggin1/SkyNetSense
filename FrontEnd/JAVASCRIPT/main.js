@@ -47,6 +47,15 @@ function renderStazioni(stazioni) {
     } else {
       popupHtml += `<small>Nessun dato disponibile</small><br/><br/>`;
     }
+    popupHtml = `<strong>${s.nome_stazione}</strong><br/>
+  ${s.citta || ""} ${s.regione ? "(" + s.regione + ")" : ""}<br/>`;
+
+popupHtml += `<button onclick="apriGrafici('${s.nome_stazione}')"
+    style="margin-top:5px;padding:4px 6px;border:none;border-radius:4px;background:#22c55e;color:#022c22;cursor:pointer;">
+    Mostra grafici
+</button>`;
+
+marker.bindPopup(popupHtml);
 
     if (s.dati && Object.keys(s.dati).length > 0) {
       popupHtml += "<strong>Dati recenti:</strong><br/>";
@@ -186,6 +195,24 @@ function ricaricaMappa() {
     map.setView([40.9, 14.2], 7); // Centro e zoom iniziali
   }
 }
+
+
+
+
+function apriGrafici(nomeStazione) {
+  const graficiBox = document.getElementById("grafici-container");
+  const graficiContent = document.getElementById("grafici-content");
+
+  
+  graficiContent.innerHTML = `<p>Grafici della stazione <strong>${nomeStazione}</strong> (in arrivo)</p>`;
+
+  
+  graficiBox.style.display = "block";
+
+  
+  graficiBox.scrollIntoView({ behavior: "smooth" });
+}
+
 
 
 // Avvia subito il caricamento quando la pagina è pronta

@@ -133,11 +133,26 @@ main {
   min-height: 0;
 }
 
-#map {
+#left-column {
   flex: 2;
-  height: 100%;
-  min-height: 320px;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#map {
+  height: 55vh;   
+  min-height: 300px;
+}
+
+#grafici-container {
+  height: 45vh;   
+  min-height: 200px;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  overflow-y: auto;
+  display: none;  
 }
 
 #sidebar {
@@ -314,6 +329,7 @@ main {
   color: #e5e7eb;
 }
 
+
 @media (max-width: 900px) {
   main {
     flex-direction: column;
@@ -327,3 +343,6 @@ main {
     border-top: 1px solid rgba(148, 163, 184, 0.15);
   }
 }
+
+
+
