@@ -50,10 +50,6 @@ function renderStazioni(stazioni) {
     popupHtml = `<strong>${s.nome_stazione}</strong><br/>
   ${s.citta || ""} ${s.regione ? "(" + s.regione + ")" : ""}<br/>`;
 
-    popupHtml += `<button onclick="apriGrafici('${s.nome_stazione}')"
-    style="margin-top:5px;padding:4px 6px;border:none;border-radius:4px;background:#22c55e;color:#022c22;cursor:pointer;">
-    Mostra grafici
-</button>`;
 
     marker.bindPopup(popupHtml);
 
@@ -62,7 +58,13 @@ function renderStazioni(stazioni) {
       for (const [chiave, valore] of Object.entries(s.dati)) {
         popupHtml += `${chiave}: ${valore}<br/>`;
       }
+      popupHtml += `<button onclick="apriGrafici('${s.nome_stazione}')"
+    style="margin-top:5px;padding:4px 6px;border:none;border-radius:4px;background:#22c55e;color:#022c22;cursor:pointer;">
+    Mostra grafici
+</button>`;
     } marker.bindPopup(popupHtml);
+
+
 
     // creiamo la card nella sidebar a destra
     const card = document.createElement("div");
