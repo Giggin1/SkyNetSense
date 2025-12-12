@@ -39,46 +39,55 @@
 
   <main>
 
-<main>
+    <main>
 
-  <div id="left-column" style="display: flex; flex-direction: column; gap: 0.5rem;">
-    <div id="map" style="flex: 1; min-height: 320px;"></div>
+      <div id="left-column" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div id="map" style="flex: 1; min-height: 320px;"></div>
 
-    <div id="grafici-container" style="display: block;"></div>
-</div>
+        <div id="grafici-container" style="display: none;">
+          <div id="grafici-content"></div>
 
+          <button id="close-grafici-btn" onclick="closeGrafici()">Chiudi grafici</button>
 
-    <aside id="sidebar">
-      <div class="badge-public">
-        <span class="badge-dot"></span>
-        Accesso pubblico: nessun login richiesto
+          <div id="modale-grafico" class="modale-grafico" style="display: none;">
+            Testo del modale
+          </div>
+        </div>
       </div>
 
-      <div class="subtitle">
-        Stazioni meteo registrate nella rete SkyNetSense
-      </div>
-
-      <div class="legend">
-        <span class="legend-dot"></span>
-        Puntini verdi: posizione approssimativa delle stazioni nella città registrata.
-      </div>
-
-      <div id="station-list"></div>
-
-      <div class="footer-info">
-        Gli utenti non registrati possono visualizzare <strong>stazioni</strong> e
-        <strong>dati aggregati</strong>, ma non modificare impostazioni o configurazioni.
-      </div>
-    </aside>
-
-  </main>
 
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+      <aside id="sidebar">
+        <div class="badge-public">
+          <span class="badge-dot"></span>
+          Accesso pubblico: nessun login richiesto
+        </div>
+
+        <div class="subtitle">
+          Stazioni meteo registrate nella rete SkyNetSense
+        </div>
+
+        <div class="legend">
+          <span class="legend-dot"></span>
+          Puntini verdi: posizione approssimativa delle stazioni nella città registrata.
+        </div>
+
+        <div id="station-list"></div>
+
+        <div class="footer-info">
+          Gli utenti non registrati possono visualizzare <strong>stazioni</strong> e
+          <strong>dati aggregati</strong>, ma non modificare impostazioni o configurazioni.
+        </div>
+      </aside>
+
+    </main>
 
 
-  <script src="JAVASCRIPT/main.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+    <script src="JAVASCRIPT/main.js"></script>
 </body>
 
 </html>

@@ -78,6 +78,26 @@ header { /* Stile della barra superiore (Dove si trova il logo in pratica) */
   color: #9ca3af;
 }
 
+/* Bottone "Torna alla Home" in alto a destra */
+.btn-back-home {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  color: #9ca3af;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.08s ease;
+}
+
+
 main {
   flex: 1;
   display: flex;

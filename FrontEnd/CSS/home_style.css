@@ -155,6 +155,20 @@ main {
   display: none;  
 }
 
+#close-grafici-btn {
+  margin-top: 0.6rem;
+  padding: 6px 10px;
+  background: rgba(148, 163, 184, 0.15);
+  border: none;
+  border-radius: 6px;
+  color: #a7f3d0;
+  cursor: pointer;
+  position: absolute;
+  right: 27rem;
+  top: 55vh;
+}
+
+
 #sidebar {
   flex: 1;
   min-width: 300px;
