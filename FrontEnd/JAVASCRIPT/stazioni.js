@@ -42,3 +42,8 @@ const formBox = document.getElementById("visualizzazioneModale");
 
 formBox.style.display="flex";
 }
+function nascondiForm(){
+const formBox = document.getElementById("visualizzazioneModale");
+
+formBox.style.display="none";
+}

@@ -54,7 +54,7 @@
 
       <div id="visualizzazioneModale" style="display: none">
       <form id="station-form">
-        <h2>Dati Nuova Stazione</h2>
+        <h2>Aggiungi una nuova stazione</h2>
 
         <div class="form-group">
           <label for="station-name">Nome della Stazione</label>
@@ -72,12 +72,13 @@
         </div>
 
         <div id="form-actions">
+          <button type="submit" class="btn-submit" onclick="nascondiForm()">Annulla</button>
           <button type="submit" class="btn-submit">Salva Stazione</button>
         </div>
       </form>
     </div>
       <!-- Bottone per aggiungere una nuova stazione -->
-      <button class="add-station-button"> Aggiungi stazione </button>
+      <button class="add-station-button" onclick="mostraForm()"> Aggiungi stazione </button>
 
       </div>
     </aside>

@@ -80,6 +80,7 @@ header {
   color: #9ca3af;
 }
 
+
 /* Bottone "Torna alla Home" in alto a destra */
 .btn-back-home {
   background: transparent;
@@ -285,7 +286,7 @@ main {
 }
 
 #station-form {
-    background: white; 
+    background: rgb(0, 0, 0); 
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
@@ -308,7 +309,7 @@ main {
 
     padding: 10px;
 
-    border: 1px solid #ccc;
+    border: 1px solid #545454;
 
     border-radius: 5px;
 
