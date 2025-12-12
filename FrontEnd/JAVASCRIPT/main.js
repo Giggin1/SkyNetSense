@@ -202,10 +202,9 @@ function ricaricaMappa() {
 function apriGrafici(nomeStazione) {
   const graficiBox = document.getElementById("grafici-container");
   const graficiContent = document.getElementById("grafici-content");
-
   
   graficiContent.innerHTML = `<p>Grafici della stazione <strong>${nomeStazione}</strong> (in arrivo)</p>`;
-
+  
   
   graficiBox.style.display = "block";
 
