@@ -28,7 +28,7 @@ function mostraStazioni(stazioni) {
     .map(
       (s) => `
         <div style="border:1px solid #fa0000ff; padding:10px; margin:10px 0;">
-          <strong>${s.cf_utente}</strong><br>
+          <strong>${s.nome_stazione}</strong><br>
         </div>
       `
     )
