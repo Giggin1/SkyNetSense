@@ -358,5 +358,56 @@ main {
   }
 }
 
+.modale-grafico{
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.grafici-head{
+  display:flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.grafici-title{ font-weight: 700; }
+.grafici-subtitle{ font-size: 0.85rem; color:#9ca3af; margin-top:2px; }
+
+.grafici-controls{
+  display:flex;
+  align-items:flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.grafici-controls label{
+  display:block;
+  font-size: 0.75rem;
+  color:#9ca3af;
+  margin-bottom: 4px;
+}
+
+.grafici-controls select{
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(148,163,184,0.2);
+  background:#071018;
+  color:#e5e7eb;
+}
+
+.chart-wrapper{
+  position: relative;
+  height: 320px;
+}
+
+#grafici-error{
+  margin-top: 10px;
+  color: #fca5a5;
+  font-size: 0.9rem;
+}
 
 

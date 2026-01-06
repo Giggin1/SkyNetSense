@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Skynetsense - Mappa stazioni</title>
 
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-
 
   <link rel="stylesheet" href="CSS/home_style.css" />
 </head>
@@ -23,71 +20,88 @@
         <div class="brand-subtitle">Rete di stazioni meteo distribuite</div>
       </div>
     </button>
+
     <div style="display:flex;align-items:center;gap:0.8rem;">
       <div class="header-right" id="user-panel" style="display:flex; gap:10px; align-items:center;">
-        <div class="header-right">
-          Vista pubblica • Solo lettura dati
-        </div>
-        <a href="/login" class="btn-login"
-          style="text-decoration: none; display: inline-block; text-align: center;">Login</a>
-        <a href="/registrazione" class="btn-register"
-          style="text-decoration: none; display: inline-block; text-align: center;">Registrati</a>
+        <div class="header-right">Vista pubblica • Solo lettura dati</div>
+        <a href="/login" class="btn-login" style="text-decoration:none; display:inline-block; text-align:center;">Login</a>
+        <a href="/registrazione" class="btn-register" style="text-decoration:none; display:inline-block; text-align:center;">Registrati</a>
       </div>
     </div>
   </header>
 
-
   <main>
+    <div id="left-column" style="display:flex; flex-direction:column; gap:0.5rem;">
+  
+      <div id="map" style="flex: 1; min-height: 320px;"></div>
 
-    <main>
+      <!-- Box grafici sotto la mappa (come avevi prima) -->
+      <div id="grafici-container" style="display:none;">
+        <div id="grafici-content"></div>
 
-      <div id="left-column" style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <div id="map" style="flex: 1; min-height: 320px;"></div>
+        <button id="close-grafici-btn" onclick="closeGrafici()">Chiudi grafici</button>
 
-        <div id="grafici-container" style="display: none;">
-          <div id="grafici-content"></div>
+        <!-- Modale grafico (dentro grafici-container) -->
+        <div id="modale-grafico" class="modale-grafico" style="display:none;">
+          <div class="grafici-head">
+            <div>
+              <div id="grafici-title" class="grafici-title">Grafici</div>
+              <div id="grafici-subtitle" class="grafici-subtitle"></div>
+            </div>
 
-          <button id="close-grafici-btn" onclick="closeGrafici()">Chiudi grafici</button>
+            <div class="grafici-controls">
+              <label for="sensorSelect">Sensore</label>
+              <select id="sensorSelect"></select>
 
-          <div id="modale-grafico" class="modale-grafico" style="display: none;">
-            Testo del modale
+              <label for="limitSelect">Punti</label>
+              <select id="limitSelect">
+                <option value="50">50</option>
+                <option value="200" selected>200</option>
+                <option value="500">500</option>
+              </select>
+
+              <button id="refreshChartBtn" class="btn-primary" type="button">Aggiorna</button>
+            </div>
           </div>
+
+          <div class="chart-wrapper">
+            <canvas id="sensorChart"></canvas>
+          </div>
+
+          <div id="grafici-error" class="grafici-error" style="display:none;"></div>
         </div>
       </div>
+    </div>
 
+    <aside id="sidebar">
+      <div class="badge-public">
+        <span class="badge-dot"></span>
+        Accesso pubblico: nessun login richiesto
+      </div>
 
+      <div class="subtitle">
+        Stazioni meteo registrate nella rete SkyNetSense
+      </div>
 
-      <aside id="sidebar">
-        <div class="badge-public">
-          <span class="badge-dot"></span>
-          Accesso pubblico: nessun login richiesto
-        </div>
+      <div class="legend">
+        <span class="legend-dot"></span>
+        Puntini verdi: posizione approssimativa delle stazioni nella città registrata.
+      </div>
 
-        <div class="subtitle">
-          Stazioni meteo registrate nella rete SkyNetSense
-        </div>
+      <div id="station-list"></div>
 
-        <div class="legend">
-          <span class="legend-dot"></span>
-          Puntini verdi: posizione approssimativa delle stazioni nella città registrata.
-        </div>
+      <div class="footer-info">
+        Gli utenti non registrati possono visualizzare <strong>stazioni</strong> e
+        <strong>dati aggregati</strong>, ma non modificare impostazioni o configurazioni.
+      </div>
+    </aside>
+  </main>
 
-        <div id="station-list"></div>
+  <!-- Script: tutti dentro il body, una sola volta, e in ordine giusto -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-        <div class="footer-info">
-          Gli utenti non registrati possono visualizzare <strong>stazioni</strong> e
-          <strong>dati aggregati</strong>, ma non modificare impostazioni o configurazioni.
-        </div>
-      </aside>
-
-    </main>
-
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-
-    <script src="JAVASCRIPT/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="JAVASCRIPT/main.js"></script>
 </body>
-
 </html>

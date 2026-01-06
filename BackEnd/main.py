@@ -156,3 +156,98 @@ def logout():
     session.clear() # Rimuove tutti i dati dalla sessione
     return redirect(url_for('home')) # O restituisci un JSON se preferisci gestirlo via JS
 
+
+
+# Endpoint per ottenere i sensori di una stazione specifica 
+
+@main_bp.route("/api/public/sensors", methods=["GET"])
+def public_sensors():
+    cf_utente = request.args.get("cf_utente") or request.args.get("cf")
+    nome_stazione = request.args.get("nome_stazione") or request.args.get("stazione")
+
+    if not cf_utente or not nome_stazione:
+        return jsonify({"error": "Parametri mancanti: cf_utente, nome_stazione"}), 400
+
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore connessione DB"}), 500
+
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT DISTINCT d.modello, d.nome_sensore, COALESCE(s.unita,'')
+            FROM Dati d
+            LEFT JOIN Sensori s
+              ON s.modello = d.modello
+             AND s.nome    = d.nome_sensore
+            WHERE d.cf_utente = %s
+              AND d.nome_stazione = %s
+            ORDER BY d.modello, d.nome_sensore
+        """, (cf_utente, nome_stazione))
+
+        sensors = [
+            {"modello": m, "nome_sensore": n, "unita": u}
+            for (m, n, u) in cur.fetchall()
+        ]
+        return jsonify({"sensors": sensors}), 200
+    finally:
+        cur.close()
+        conn.close()
+
+# Endpoint per ottenere lo storico dei dati di un sensore specifico
+
+@main_bp.route("/api/public/history", methods=["GET"])
+def public_history():
+    cf_utente = request.args.get("cf_utente") or request.args.get("cf")
+    nome_stazione = request.args.get("nome_stazione") or request.args.get("stazione")
+    modello = request.args.get("modello")
+    nome_sensore = request.args.get("nome_sensore")
+    limit = request.args.get("limit", "200")
+
+    if not all([cf_utente, nome_stazione, modello, nome_sensore]):
+        return jsonify({"error": "Parametri mancanti: cf_utente, nome_stazione, modello, nome_sensore"}), 400
+
+    try:
+        limit = int(limit)
+    except:
+        limit = 200
+    limit = max(1, min(limit, 2000))
+
+    conn = connessione()
+    if conn is None:
+        return jsonify({"error": "Errore connessione DB"}), 500
+
+    cur = conn.cursor()
+    try:
+        cur.execute(f"""
+            SELECT d.timestamp_lettura, d.valore, COALESCE(s.unita,'')
+            FROM Dati d
+            LEFT JOIN Sensori s
+              ON s.modello = d.modello
+             AND s.nome    = d.nome_sensore
+            WHERE d.cf_utente = %s
+              AND d.nome_stazione = %s
+              AND d.modello = %s
+              AND d.nome_sensore = %s
+            ORDER BY d.timestamp_lettura DESC
+            LIMIT {limit}
+        """, (cf_utente, nome_stazione, modello, nome_sensore))
+
+        rows = cur.fetchall()
+
+        points = []
+        for ts, val, unita in reversed(rows):
+            points.append({
+                "timestamp": ts.strftime("%Y-%m-%d %H:%M:%S"),
+                "value": float(val)
+            })
+
+        return jsonify({
+            "modello": modello,
+            "nome_sensore": nome_sensore,
+            "unita": (rows[0][2] if rows else ""),
+            "points": points
+        }), 200
+    finally:
+        cur.close()
+        conn.close()
