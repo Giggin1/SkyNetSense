@@ -295,7 +295,9 @@ async function apriGrafici(cfUtente, nomeStazione) {
   graficiBox.style.display = "block";
   modale.style.display = "block";
   graficiBox.scrollIntoView({ behavior: "smooth" });
-
+  setTimeout(() => {
+    graficiBox.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 100);
   clearGraficiError();
 
   const sensorSelect = document.getElementById("sensorSelect");
